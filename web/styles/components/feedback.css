@@ -1,0 +1,54 @@
+.empty {
+padding: var(--space-6) var(--space-4);
+color: var(--content-secondary);
+text-align: center;
+}
+
+/* Destaque para o MR que já juntou aprovações. */
+.badge--strong {
+background: var(--status-success-bg);
+border-color: var(--status-success-content);
+color: var(--status-success-content);
+font-weight: 600;
+}
+.notice, .warning {
+margin: 0 0 var(--space-4);
+font-size: var(--font-size-xs);
+}
+
+.notice { color: var(--content-secondary); }
+
+.warning {
+padding: var(--space-2) var(--space-3);
+border: var(--border-width) solid var(--status-warning-border);
+border-radius: var(--radius-md);
+background: var(--status-warning-bg);
+color: var(--status-warning-content);
+}
+
+code {
+padding: 0 var(--space-1);
+border-radius: var(--space-1);
+background: var(--surface-raised);
+font-size: var(--font-size-xs);
+}
+
+.notice--hint {
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--status-info-border);
+  border-radius: var(--radius-md);
+  background: var(--status-info-bg);
+  color: var(--status-info-content);
+}
+
+/* Legenda da marca de alteração, abaixo da barra de filtros. */
+.legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  color: var(--content-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.legend .changed { margin-left: 0; }

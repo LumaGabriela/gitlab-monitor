@@ -1,0 +1,15 @@
+/* Barra de ordenação e filtros da tabela. */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+}
+
+.toolbar .field { flex: 0 1 14rem; }
+
+.toolbar .field--theme { flex: 0 0 10rem; margin-left: auto; }
+
+.toolbar__reset { flex: none; }

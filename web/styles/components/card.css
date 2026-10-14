@@ -1,0 +1,7 @@
+/* Card flat: borda semântica, sem sombra pesada. */
+.card {
+  background: var(--surface-default);
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}

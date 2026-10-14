@@ -1,0 +1,64 @@
+/* Botões conforme o guia button: variantes e todos os estados obrigatórios. */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-height-md);
+  padding: 0 var(--space-4);
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  line-height: var(--line-height-base);
+  cursor: pointer;
+}
+
+.button:focus-visible {
+  outline: var(--focus-ring) solid var(--border-focus);
+  outline-offset: var(--focus-offset);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.button--primary {
+  background: var(--interactive-primary);
+  border-color: var(--interactive-primary);
+  color: var(--interactive-primary-on);
+}
+
+.button--primary:hover:not(:disabled) {
+  background: var(--interactive-primary-hover);
+  border-color: var(--interactive-primary-hover);
+}
+
+.button--primary:active:not(:disabled) {
+  background: var(--interactive-primary-hover);
+  border-color: var(--interactive-primary-hover);
+  transform: translateY(var(--border-width));
+}
+
+.button--ghost {
+  background: transparent;
+  border-color: var(--border-default);
+  color: var(--content-secondary);
+}
+
+.button--ghost:hover:not(:disabled) {
+  background: var(--surface-raised);
+  color: var(--content-primary);
+}
+
+.button--ghost:active:not(:disabled) {
+  transform: translateY(var(--border-width));
+}
+
+/* Estado de carregamento exigido pelo guia. */
+.button[aria-busy="true"] {
+  cursor: progress;
+  opacity: 0.7;
+}
