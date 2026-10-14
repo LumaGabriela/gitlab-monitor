@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>GitLab Monitor — {{project}}</title>
+<script>{{theme_script}}</script>
+<style>{{styles}}</style>
+</head>
+<body>
+<main class="page">
+<h1 class="page__title">Merge Requests abertos</h1>
+<p class="page__meta" id="meta">{{meta}}</p>
+{{settings}}
+<p class="notice notice--hint" id="hint" role="status" hidden></p>
+<p class="warning" id="warning" role="status" hidden></p>
+{{toolbar}}
+{{legend}}
+<div id="table">{{table}}</div>
+</main>
+<script>{{script}}</script>
+</body>
+</html>

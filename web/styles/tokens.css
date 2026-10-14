@@ -1,0 +1,99 @@
+/* Tokens do design system FPF Tech (guias card, feedback, button e input).
+   Nenhum outro arquivo define cor; os componentes só consomem variáveis. */
+:root {
+  color-scheme: light;
+
+  /* Tipografia */
+  --font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-size-base: 16px;
+  --font-size-sm: 0.875rem;
+  --font-size-xs: 0.8125rem;
+  --font-size-xxs: 0.75rem;
+  --font-size-lg: 1.375rem;
+  --line-height-base: 1.5;
+
+  /* Espaçamento e forma */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --radius-md: 10px;
+  --border-width: 1px;
+  --focus-ring: 2px;
+  --focus-offset: 2px;
+  --control-height-sm: 32px;
+  --control-height-md: 40px;
+  --page-max-width: 1180px;
+
+  /* Superfícies e conteúdo */
+  --surface-page: #F5F5F6;
+  --surface-default: #FFFFFF;
+  --surface-raised: #FFFFFF;
+  --border-default: #DFDEDE;
+  --border-focus: #B3C50E;
+  --content-primary: #383839;
+  --content-secondary: #4A4A4B;
+  --content-tertiary: #8C8C8C;
+
+  /* Ações */
+  --interactive-primary: #B3C50E;
+  --interactive-primary-hover: #8FA00B;
+  --interactive-primary-on: #383839;
+  --interactive-secondary: #383839;
+  --interactive-secondary-hover: #474647;
+  --interactive-secondary-on: #FFFFFF;
+
+  /* Status */
+  --status-success-bg: rgba(52, 174, 83, 0.10);
+  --status-success-border: rgba(52, 174, 83, 0.30);
+  --status-success-content: #1E7A3A;
+  --status-success-solid: #34AE53;
+  --status-warning-bg: rgba(229, 160, 32, 0.10);
+  --status-warning-border: rgba(229, 160, 32, 0.30);
+  --status-warning-content: #C8860A;
+  --status-warning-solid: #E5A020;
+  --status-danger-bg: rgba(217, 64, 64, 0.10);
+  --status-danger-border: rgba(217, 64, 64, 0.25);
+  --status-danger-content: #B83535;
+  --status-danger-solid: #D94040;
+  --status-info-bg: rgba(45, 143, 212, 0.10);
+  --status-info-border: rgba(45, 143, 212, 0.25);
+  --status-info-content: #1666A0;
+}
+
+/* Um único bloco escuro, aplicado por data-theme. O "automático" é resolvido
+   em JavaScript ainda no <head>, antes da primeira pintura, de modo que não
+   existe um segundo bloco de tokens para manter em sincronia. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --surface-page: #161617;
+  --surface-default: #1E1E1F;
+  --surface-raised: #2A2A2B;
+  --border-default: rgba(255, 255, 255, 0.10);
+  --border-focus: #B3C50E;
+  --content-primary: rgba(255, 255, 255, 0.95);
+  --content-secondary: rgba(255, 255, 255, 0.65);
+  --content-tertiary: rgba(255, 255, 255, 0.40);
+
+  --interactive-primary: #B3C50E;
+  --interactive-primary-hover: #C4D218;
+  --interactive-primary-on: #222223;
+  --interactive-secondary: rgba(255, 255, 255, 0.12);
+  --interactive-secondary-hover: rgba(255, 255, 255, 0.18);
+  --interactive-secondary-on: rgba(255, 255, 255, 0.95);
+
+  --status-success-bg: rgba(52, 174, 83, 0.15);
+  --status-success-border: rgba(52, 174, 83, 0.30);
+  --status-success-content: #50C96C;
+  --status-warning-bg: rgba(229, 160, 32, 0.15);
+  --status-warning-border: rgba(229, 160, 32, 0.30);
+  --status-warning-content: #FFBA42;
+  --status-danger-bg: rgba(217, 64, 64, 0.15);
+  --status-danger-border: rgba(217, 64, 64, 0.30);
+  --status-danger-content: #E85555;
+  --status-info-bg: rgba(45, 143, 212, 0.15);
+  --status-info-border: rgba(45, 143, 212, 0.30);
+  --status-info-content: #52AAEA;
+}

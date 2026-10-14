@@ -1,0 +1,51 @@
+table { border-collapse: collapse; width: 100%; }
+
+th, td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  vertical-align: top;
+  border-bottom: var(--border-width) solid var(--border-default);
+}
+
+thead th {
+  background: var(--surface-raised);
+  color: var(--content-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+tbody tr:last-child td { border-bottom: 0; }
+
+td.author, td.threads, td.openers { color: var(--content-secondary); }
+
+td.mr a {
+  color: var(--content-primary);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+td.mr a:hover { text-decoration: underline; }
+
+td.mr a:focus-visible {
+  outline: var(--focus-ring) solid var(--border-focus);
+  outline-offset: var(--focus-offset);
+  border-radius: var(--space-1);
+}
+
+/* Linha única por célula: flex não quebra entre os itens, então a marca de
+   alteração nunca vai parar acima do conteúdo. */
+.cell {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Marca da célula que mudou desde a consulta anterior. */
+.changed {
+  flex: none;
+  margin-left: var(--space-1);
+  font-size: var(--font-size-xxs);
+  line-height: 1;
+}
