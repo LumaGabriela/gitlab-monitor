@@ -1,7 +1,9 @@
-/* Card flat: borda semântica, sem sombra pesada. */
+/* Elevação leve (token --shadow-card), para aproximar o visual dos
+   componentes elevados do Angular Material sem adotar a dependência. */
 .card {
   background: var(--surface-default);
   border: var(--border-width) solid var(--border-default);
   border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
 }

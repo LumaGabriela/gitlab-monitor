@@ -1,11 +1,50 @@
-table { border-collapse: collapse; width: 100%; }
+/* Rolagem própria da tabela: em telas estreitas, a tabela ganha uma barra
+   horizontal dentro do card em vez de espremer colunas ou vazar da página. */
+.table-scroll { overflow-x: auto; }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+  /* Soma das larguras abaixo (168ch): abaixo disso, .table-scroll rola em
+     vez de comprimir colunas (o que voltaria a quebrar datas e badges). */
+  min-width: 168ch;
+}
 
 th, td {
   padding: var(--space-3) var(--space-4);
   text-align: left;
   vertical-align: top;
+  overflow-wrap: anywhere;
   border-bottom: var(--border-width) solid var(--border-default);
 }
+
+/* Datas e horas relativas não quebram linha: como a tabela tem largura
+   mínima própria (table-scroll acima), a coluna nunca fica estreita demais
+   para o texto inteiro caber em uma linha só. */
+th.updated_label, td.updated_label, th.created_label, td.created_label {
+  white-space: nowrap;
+}
+
+/* Larguras fixas em ch, declaradas no <colgroup> (table-layout: fixed usa a
+   primeira linha para decidir cada coluna). Em "ch" no próprio th/td, o
+   cabeçalho (font-size-xs, menor) calculava uma largura diferente da do
+   corpo (font-size-base) para a "mesma" largura: a coluna saía mais estreita
+   no cabeçalho, quebrando palavras como "MERGEABLE" ao meio. O <col> herda
+   o font-size da tabela (o base), então os dois usam a mesma régua.
+   MR fica com o dobro da coluna Autor, como pedido. As duas colunas de data
+   são largas o bastante para o texto mais longo ("23 minutes ago",
+   "30/10/2026") sem quebrar. */
+col.likes { width: 10ch; }
+col.mr { width: 36ch; }
+col.author { width: 18ch; }
+col.threads { width: 13ch; }
+col.openers { width: 20ch; }
+col.mergeable { width: 13ch; }
+col.conflicts { width: 13ch; }
+col.pipeline { width: 13ch; }
+col.updated_label { width: 18ch; }
+col.created_label { width: 14ch; }
 
 thead th {
   background: var(--surface-raised);
@@ -48,4 +87,11 @@ td.mr a:focus-visible {
   margin-left: var(--space-1);
   font-size: var(--font-size-xxs);
   line-height: 1;
+}
+
+/* Quem reagiu com 👍, abaixo do emblema de likes. */
+.likers {
+  margin-top: var(--space-1);
+  color: var(--content-secondary);
+  font-size: var(--font-size-xxs);
 }

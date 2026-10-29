@@ -72,8 +72,8 @@ function syncFilters(filters) {
   const signature = JSON.stringify(filters);
   if (signature === panel.filters) return;
   panel.filters = signature;
-  syncSelect(panel.author, filters.authors, 'Todos');
-  syncSelect(panel.pipeline, filters.pipelines, 'Todas');
+  syncSelect(panel.author, filters.authors, 'All');
+  syncSelect(panel.pipeline, filters.pipelines, 'All');
 }
 
 // true quando os eventos foram realmente entregues ao navegador.
@@ -83,7 +83,7 @@ function announce(events) {
   // Muitos eventos de uma vez viram um aviso só: uma pilha de banners seria
   // pior que a informação que eles trazem.
   if (events.length > MAX_NOTIFICATIONS) {
-    new Notification(`${events.length} atualizações nos MRs`, {
+    new Notification(`${events.length} MR updates`, {
       body: events.map((text) => text.split('\n')[0]).join('\n'),
       tag: 'resumo',
     });
@@ -104,6 +104,9 @@ async function poll() {
     if (!response.ok) throw new Error(response.status);
     const data = await response.json();
     panel.node.innerHTML = data.table;
+    // A tabela (e os <col> dela) é recriada a cada poll: reaplica a largura
+    // redistribuída, ou os <col> novos voltam ao tamanho estático em ch.
+    redistributeColumnWidths(window.gitlabMonitorHiddenColumns || []);
     panel.meta.textContent = data.meta;
     panel.updated = data.updated;
     warn(data.error);
@@ -115,7 +118,7 @@ async function poll() {
     schedule(data.poll);
     return true;
   } catch (error) {
-    warn('Sem resposta do monitor. Nova tentativa em 10s.');
+    warn('No response from the monitor. Retrying in 10s.');
     schedule(10);
     return false;
   }
@@ -189,7 +192,7 @@ panel.form.addEventListener('submit', async (event) => {
       poll();
     }
   } catch (error) {
-    warn('Não foi possível salvar: o monitor não respondeu.');
+    warn('Could not save: the monitor did not respond.');
   } finally {
     botao.disabled = false;
     botao.removeAttribute('aria-busy');
@@ -204,7 +207,7 @@ async function requestPermission() {
     return true;
   }
   panel.toggle.checked = false;
-  hint('Permissão de notificação negada. Reveja a permissão deste site no navegador para reativar.');
+  hint('Notification permission denied. Review this site’s permission in the browser to turn it back on.');
   return false;
 }
 
@@ -215,7 +218,7 @@ panel.toggle.addEventListener('change', async () => {
   }
   if (!('Notification' in window)) {
     panel.toggle.checked = false;
-    hint('Este navegador não oferece notificações.');
+    hint('This browser does not offer notifications.');
     return;
   }
   // Marcar a caixa já é o gesto que o navegador exige para pedir permissão.
@@ -242,9 +245,9 @@ panel.refresh.addEventListener('click', async () => {
       if (panel.updated !== anterior) return;
       await new Promise((pronto) => setTimeout(pronto, 1000));
     }
-    warn('A consulta manual demorou mais que o esperado; a tabela se atualiza sozinha quando ela terminar.');
+    warn('The manual check took longer than expected; the table updates on its own once it finishes.');
   } catch (error) {
-    warn('Não foi possível consultar agora: o monitor não respondeu.');
+    warn('Could not check now: the monitor did not respond.');
   } finally {
     panel.refresh.disabled = false;
     panel.refresh.removeAttribute('aria-busy');
@@ -256,40 +259,40 @@ panel.refresh.addEventListener('click', async () => {
 // duas sem esperar que algum MR mude.
 panel.test.addEventListener('click', async () => {
   if (!('Notification' in window)) {
-    hint('Este navegador não oferece notificações.');
+    hint('This browser does not offer notifications.');
     return;
   }
   if (Notification.permission === 'denied') {
-    hint('Notificações bloqueadas para este site no navegador. Libere a permissão para reativar.');
+    hint('Notifications blocked for this site in the browser. Allow the permission to turn it back on.');
     return;
   }
   // O clique é o gesto que o navegador exige para pedir a permissão.
   if (Notification.permission !== 'granted' && !(await requestPermission())) return;
   new Notification('GitLab Monitor', {
-    body: 'Notificação de teste: é assim que as mudanças nos MRs vão aparecer.',
+    body: 'Test notification: this is how MR changes will show up.',
     tag: 'teste',
   });
-  hint('Notificação de teste enviada. Se nada apareceu na tela, o bloqueio está '
-    + 'no sistema, não nesta página: verifique as notificações do navegador nos '
-    + 'ajustes do sistema operacional e se o Não Perturbe/Foco está ligado.');
+  hint('Test notification sent. If nothing appeared on screen, the block is at '
+    + 'the system level, not on this page: check the browser’s notifications in '
+    + 'the operating system settings and whether Do Not Disturb/Focus is on.');
 });
 
 // A caixa vem marcada: o painel tenta deixar as notificações prontas sozinho.
 function setupNotifications() {
   if (!('Notification' in window)) {
     panel.toggle.checked = false;
-    hint('Este navegador não oferece notificações.');
+    hint('This browser does not offer notifications.');
     return;
   }
   if (Notification.permission === 'granted') return;
   if (Notification.permission === 'denied') {
     panel.toggle.checked = false;
-    hint('Notificações bloqueadas para este site no navegador. Libere a permissão para reativar.');
+    hint('Notifications blocked for this site in the browser. Allow the permission to turn it back on.');
     return;
   }
   // Permissão ainda não decidida: o navegador só aceita o pedido a partir de
   // um gesto, então o painel espera o primeiro em vez de desistir.
-  hint('Notificações do navegador ligadas, aguardando sua permissão: clique em qualquer lugar da página para confirmar.');
+  hint('Browser notifications are on, waiting for your permission: click anywhere on the page to confirm.');
   let pedido = false;
   const pedir = () => {
     if (pedido) return;
@@ -299,6 +302,109 @@ function setupNotifications() {
   document.addEventListener('pointerdown', pedir, { once: true });
   document.addEventListener('keydown', pedir, { once: true });
 }
+
+// Visibilidade de colunas: columns.js já aplicou o estado salvo antes da
+// pintura (window.gitlabMonitorHiddenColumns); aqui sincroniza as checkboxes
+// com ele, grava a escolha a cada mudança e redistribui a largura das
+// colunas visíveis (ver redistributeColumnWidths abaixo).
+const COLUMN_STORAGE_KEY = 'gitlabMonitorHiddenColumns';
+const columnToggles = document.querySelectorAll('.columns__toggle');
+
+// Mesmas chaves e larguras em ch de REPORT_COLUMNS/table.css em
+// gitlab_monitor.py: mantenha em sincronia.
+const COLUMN_WEIGHTS = {
+  likes: 10, mr: 36, author: 18, threads: 13, openers: 20, mergeable: 13,
+  conflicts: 13, pipeline: 13, updated_label: 18, created_label: 14,
+};
+
+function applyHiddenColumns(hidden) {
+  let estilo = document.getElementById('column-visibility');
+  if (!estilo) {
+    estilo = document.createElement('style');
+    estilo.id = 'column-visibility';
+    document.head.appendChild(estilo);
+  }
+  // display: none no <col> tira a coluna inteira da contagem de colunas da
+  // tabela (como se o <col> não existisse), então não sobra largura
+  // reservada nem desalinha o índice das colunas seguintes. "visibility:
+  // collapse" e até "width: 0" no <col> já foram tentados e os dois têm o
+  // mesmo bug no Chromium: com table-layout: fixed e largura em px no <col>
+  // seguinte, a largura da PRÓXIMA coluna visível é atribuída errada (a
+  // tabela "desalinha" a partir dali). Como o th/td da coluna some junto
+  // (display: none abaixo), o índice continua batendo dos dois lados.
+  estilo.textContent = hidden
+    .map((chave) => `col.${chave} { display: none !important; }\n`
+      + `th.${chave}, td.${chave} { display: none; }`)
+    .join('\n');
+}
+
+// px por unidade de peso (ch), medido uma vez a partir do próprio layout
+// (table.css) e reaproveitado: não muda com o tamanho da janela, só com a
+// fonte, que não muda em tempo de execução.
+let pxPorPeso = null;
+
+function pesoVisivelTotal(hidden) {
+  return Object.keys(COLUMN_WEIGHTS)
+    .filter((chave) => !hidden.includes(chave))
+    .reduce((soma, chave) => soma + COLUMN_WEIGHTS[chave], 0);
+}
+
+// Com "ch" fixo por coluna, ocultar uma coluna sobrava um vão à direita da
+// última, porque a soma das larguras visíveis ficava menor que a tabela
+// (table { width: 100% }). Aqui a largura de cada coluna visível é
+// recalculada em px: se a tabela cabe no espaço disponível, elas esticam
+// proporcionalmente até preenchê-lo (sem vão); se não cabe, mantêm o
+// tamanho natural e a .table-scroll rola, como antes.
+function redistributeColumnWidths(hidden) {
+  const tabela = document.querySelector('table');
+  const rolagem = document.querySelector('.table-scroll');
+  if (!tabela || !rolagem) return;
+  if (pxPorPeso === null) {
+    // Medida ainda com as larguras estáticas em ch do table.css (nenhuma
+    // coluna visível recebeu width inline por este código ainda).
+    const pesoAtual = pesoVisivelTotal(window.gitlabMonitorHiddenColumns || []);
+    if (!pesoAtual) return;
+    pxPorPeso = tabela.getBoundingClientRect().width / pesoAtual;
+  }
+  const pesoVisivel = pesoVisivelTotal(hidden);
+  if (!pesoVisivel) return;
+  const larguraNatural = pesoVisivel * pxPorPeso;
+  const alvo = Math.max(larguraNatural, rolagem.clientWidth);
+  for (const chave of Object.keys(COLUMN_WEIGHTS)) {
+    // A coluna oculta não tem <col> gerado (display: none em
+    // applyHiddenColumns): não há o que medir nem redistribuir para ela.
+    if (hidden.includes(chave)) continue;
+    const coluna = tabela.querySelector(`col.${chave}`);
+    if (coluna) coluna.style.width = `${(COLUMN_WEIGHTS[chave] / pesoVisivel) * alvo}px`;
+  }
+}
+
+const hiddenColumns = window.gitlabMonitorHiddenColumns || [];
+for (const toggle of columnToggles) {
+  toggle.checked = !hiddenColumns.includes(toggle.value);
+}
+redistributeColumnWidths(hiddenColumns);
+
+for (const toggle of columnToggles) {
+  toggle.addEventListener('change', () => {
+    const hidden = [...columnToggles]
+      .filter((item) => !item.checked)
+      .map((item) => item.value);
+    window.gitlabMonitorHiddenColumns = hidden;
+    applyHiddenColumns(hidden);
+    redistributeColumnWidths(hidden);
+    try {
+      localStorage.setItem(COLUMN_STORAGE_KEY, JSON.stringify(hidden));
+    } catch (erro) {
+      // Sem armazenamento, a escolha vale só nesta aba.
+    }
+  });
+}
+
+// A tabela é toda recriada a cada poll (innerHTML): os <col> novos voltam à
+// largura estática em ch até serem redistribuídos de novo. O tamanho da
+// janela também pode mudar o espaço disponível a qualquer momento.
+window.addEventListener('resize', () => redistributeColumnWidths(window.gitlabMonitorHiddenColumns || []));
 
 setupNotifications();
 poll();

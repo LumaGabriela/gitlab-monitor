@@ -1,75 +1,76 @@
 #!/usr/bin/env python3
-"""Monitora MRs via GET, sem pacotes Python externos (Python 3.9+).
+"""Monitors MRs via GET, with no external Python packages (Python 3.9+).
 
-Quatro modos. Sem --mode, o modo é perguntado no terminal:
-  1 - Monitoramento: acompanha os MRs e avisa a cada mudança, até Ctrl+C.
-  2 - Relatório atual: consulta uma vez e imprime a tabela dos MRs abertos,
-      com likes, autor, threads, quem abriu as threads e o status da
-      pipeline. O texto da coluna MR é link para o MR.
-  3 - Painel no terminal: a tabela do relatório, redesenhada a cada intervalo.
-  4 - Painel no navegador: a mesma tabela em HTML, servida em 127.0.0.1.
-      A página se atualiza sozinha, ordena e filtra a tabela (por autor e
-      por status de pipeline), traz os parâmetros em formulário (valem só
-      nesta execução, sem gravar no .env) e pode notificar pelo navegador.
-      Exige a pasta web/, ao lado deste script.
-Os painéis também avisam as mudanças, mas guardam a referência em memória:
-não usam o histórico em disco nem o lock, e por isso convivem com um
-monitoramento do mesmo projeto. O painel 3 usa o notificador do sistema e
-respeita --no-notify; o painel 4 não usa o notificador do sistema — quem
-avisa é o navegador, com as notificações ligadas por padrão na página.
-O modo 2 consulta uma vez e não compara nada.
-Sem terminal interativo (make, cron, pipe), o modo é monitoramento.
+Four modes. Without --mode, the mode is asked in the terminal:
+  1 - Monitoring: tracks the MRs and alerts on every change, until Ctrl+C.
+  2 - Current report: queries once and prints the table of open MRs,
+      with likes, author, threads, who opened the threads and the pipeline
+      status. The MR column's text links to the MR.
+  3 - Terminal panel: the report's table, redrawn on every interval.
+  4 - Browser panel: the same table in HTML, served on 127.0.0.1.
+      The page refreshes itself, sorts and filters the table (by author and
+      pipeline status), brings the parameters in a form (valid only for
+      this run, never written to .env) and can notify through the browser.
+      Requires the web/ folder, next to this script.
+The panels also alert on changes, but keep the reference in memory: they
+don't use the on-disk history or the lock, so they coexist with a monitor
+of the same project. Panel 3 uses the system notifier and respects
+--no-notify; panel 4 doesn't use the system notifier — the browser does the
+alerting, with notifications on by default on the page.
+Mode 2 queries once and compares nothing.
+Without an interactive terminal (make, cron, pipe), the mode is monitoring.
 
-Uso a partir da pasta do monitor:
-     python3 gitlab_monitor.py https://gitlab.exemplo/grupo/projeto
-     python3 gitlab_monitor.py grupo/projeto --once --no-notify
+Usage from the monitor's folder:
+     python3 gitlab_monitor.py https://gitlab.example/group/project
+     python3 gitlab_monitor.py group/project --once --no-notify
      python3 gitlab_monitor.py --mode relatorio
      python3 gitlab_monitor.py --mode web --port 8765
-     python3 gitlab_monitor.py          # usa PROJECT e INTERVAL do .env
-Atalhos equivalentes: make monitor, make report, make panel, make web
-(exigem .venv).
+     python3 gitlab_monitor.py          # uses PROJECT and INTERVAL from .env
+Equivalent shortcuts: make monitor, make report, make panel, make web
+(require .venv).
 
-O projeto e o intervalo podem vir do .env (PROJECT e INTERVAL) ou da linha de
-comando. O que for passado na execução sobrescreve o .env: o argumento
-posicional sobrescreve PROJECT e --interval sobrescreve INTERVAL. Sem nenhum
-dos dois, o intervalo é 15 minutos e o projeto é obrigatório no comando.
+The project and the interval can come from .env (PROJECT and INTERVAL) or
+from the command line. Whatever is passed at run time overrides .env: the
+positional argument overrides PROJECT and --interval overrides INTERVAL.
+With neither, the interval is 15 minutes and the project is required on
+the command line.
 
-Formatos aceitos para PROJETOS:
-  https://gitlab.exemplo/grupo/projeto
-  https://gitlab.exemplo/grupo/subgrupo/projeto
-  https://gitlab.exemplo/grupo/projeto.git
-  https://gitlab.exemplo/grupo/projeto/-/merge_requests
-  grupo/subgrupo/projeto
-  123  (ID numérico do projeto)
-  groups/grupo/subgrupo  (forma canônica de grupo, a mesma que o monitor imprime)
+Accepted formats for PROJECTS:
+  https://gitlab.example/group/project
+  https://gitlab.example/group/subgroup/project
+  https://gitlab.example/group/project.git
+  https://gitlab.example/group/project/-/merge_requests
+  group/subgroup/project
+  123  (numeric project ID)
+  groups/group/subgroup  (canonical group form, the same the monitor prints)
 
-URLs devem usar HTTPS e a mesma instância de GITLAB_API_URL no .env.
-Parâmetros após ? e fragmentos após # são ignorados: o monitor consulta
-TODOS os MRs abertos do projeto ou grupo, percorrendo todas as páginas. Coloque URLs
-com parâmetros entre aspas no terminal para proteger caracteres como &.
+URLs must use HTTPS and the same instance as GITLAB_API_URL in .env.
+Parameters after ? and fragments after # are ignored: the monitor queries
+ALL open MRs of the project or group, walking through every page. Quote URLs
+with parameters in the terminal to protect characters like &.
 
-Formato aceito para GRUPOS (inclui projetos dos subgrupos acessíveis ao token):
+Accepted format for GROUPS (includes projects from subgroups the token can access):
   https://gitlab.fpf.br/groups/flake/siga/-/merge_requests/
-Para grupos, a URL deve terminar em /-/merge_requests, com barra final opcional.
-Exemplo: python3 gitlab_monitor.py https://gitlab.fpf.br/groups/flake/siga/-/merge_requests/
-Links SSH (git@gitlab.exemplo:grupo/projeto.git) também não são suportados.
+For groups, the URL must end in /-/merge_requests, with an optional trailing slash.
+Example: python3 gitlab_monitor.py https://gitlab.fpf.br/groups/flake/siga/-/merge_requests/
+SSH links (git@gitlab.example:group/project.git) are also not supported.
 
-Lê GITLAB_API_URL, GITLAB_TOKEN e, opcionalmente, PROJECT e INTERVAL do .env
-ao lado deste script (sem executar seu conteúdo). Likes são reações 👍, não aprovações. Discussões são contadas,
-identificadas por id entre consultas e checadas quanto a resolução e novas
-respostas; comentário avulso (sem thread resolvível) conta na quantidade mas
-não tem estado de resolução. A primeira consulta cria
-a referência; as seguintes avisam mudanças. Ctrl+C encerra o monitor.
-A referência é salva em gitlab-history/, na mesma pasta do .env, e por padrão
-é apagada ao encerrar a sessão — use --keep-history true para preservá-la e
-retomar a comparação na próxima execução.
-O computador precisa estar acordado e o processo em execução para consultar.
-Estados intermediários entre consultas podem não ser observados.
-Notificações exigem uma sessão gráfica do usuário: osascript no macOS,
-Windows PowerShell com Windows Forms no Windows e libnotify-bin com servidor
-de notificações no D-Bus da sessão no Ubuntu Desktop. Não execute com sudo.
-No Windows: py -3 gitlab_monitor.py grupo/projeto --interval 15
-Teste isolado: python3 gitlab_monitor.py --test-notify
+Reads GITLAB_API_URL, GITLAB_TOKEN and, optionally, PROJECT and INTERVAL from
+the .env file next to this script (without executing its contents). Likes are 👍 reactions, not approvals. Discussions are counted,
+identified by id across queries and checked for resolution and new replies;
+a standalone comment (without a resolvable thread) counts toward the total
+but has no resolution state. The first query creates
+the reference; the following ones alert on changes. Ctrl+C stops the monitor.
+The reference is saved in gitlab-history/, next to .env, and by default is
+deleted when the session ends — use --keep-history true to preserve it and
+resume the comparison on the next run.
+The computer needs to be awake and the process running to query. Intermediate
+states between queries may not be observed.
+Notifications require a graphical user session: osascript on macOS,
+Windows PowerShell with Windows Forms on Windows, and libnotify-bin with a
+notification server on the session's D-Bus on Ubuntu Desktop. Do not run with sudo.
+On Windows: py -3 gitlab_monitor.py group/project --interval 15
+Standalone test: python3 gitlab_monitor.py --test-notify
 API: https://docs.gitlab.com/api/merge_requests/
 """
 
@@ -175,9 +176,9 @@ def read_env(path, keys):
             try:
                 parts = shlex.split(raw, comments=True)
             except ValueError:
-                raise ValueError(f"Valor inválido de {key} no .env.") from None
+                raise ValueError(f"Invalid value for {key} in .env.") from None
             if len(parts) != 1:
-                raise ValueError(f"Valor inválido de {key} no .env.")
+                raise ValueError(f"Invalid value for {key} in .env.")
             values[key] = parts[0]
         else:
             values[key] = re.split(r"\s+#", raw, maxsplit=1)[0].strip()
@@ -196,11 +197,11 @@ def env_defaults(path):
 def credentials(path):
     values = read_env(path, ("GITLAB_API_URL", "GITLAB_TOKEN"))
     if not all(values.get(key) for key in ("GITLAB_API_URL", "GITLAB_TOKEN")):
-        raise ValueError("Defina GITLAB_API_URL e GITLAB_TOKEN no .env da raiz.")
+        raise ValueError("Set GITLAB_API_URL and GITLAB_TOKEN in the .env file.")
     base = values["GITLAB_API_URL"].rstrip("/")
     url = urlsplit(base)
     if url.scheme != "https" or not url.netloc or url.username or url.password or url.query or url.fragment:
-        raise ValueError("GITLAB_API_URL deve ser uma URL HTTPS, sem credenciais ou query.")
+        raise ValueError("GITLAB_API_URL must be an HTTPS URL, without credentials or a query string.")
     if not base.endswith("/api/v4"):
         base += "/api/v4"
     return base, values["GITLAB_TOKEN"]
@@ -210,15 +211,15 @@ def project_path(value, base):
     if "://" in value:
         url, api = urlsplit(value), urlsplit(base)
         if url.scheme != "https" or url.netloc != api.netloc or url.username:
-            raise ValueError("O link do projeto deve pertencer ao GitLab definido no .env.")
+            raise ValueError("The project link must belong to the GitLab instance set in .env.")
         prefix = api.path.removesuffix("/api/v4")
         if not url.path.startswith(prefix + "/"):
-            raise ValueError("Link fora do caminho da instância GitLab.")
+            raise ValueError("Link outside the GitLab instance path.")
         relative = unquote(url.path[len(prefix):]).strip("/")
         if relative.startswith("groups/"):
             match = re.fullmatch(r"groups/(.+)/-/merge_requests", relative)
             if not match or any(part in ("", ".", "..", "-") for part in match[1].split("/")):
-                raise ValueError("URL de grupo deve terminar em /-/merge_requests/.")
+                raise ValueError("Group URL must end in /-/merge_requests/.")
             return "groups/" + quote(match[1], safe="")
         value = relative.split("/-/", 1)[0]
     value = value.strip("/").removesuffix(".git")
@@ -227,10 +228,10 @@ def project_path(value, base):
     if value.startswith("groups/"):
         group = value[len("groups/"):].strip("/")
         if not group or any(part in ("", ".", "..", "-") for part in group.split("/")):
-            raise ValueError("Informe o grupo como groups/caminho ou pela URL de MRs.")
+            raise ValueError("Provide the group as groups/path or via the MRs URL.")
         return "groups/" + quote(group, safe="")
     if not value or (not value.isdigit() and "/" not in value):
-        raise ValueError("Informe o link, grupo/projeto ou ID numérico do projeto.")
+        raise ValueError("Provide the link, group/project path, or numeric project ID.")
     return quote(value, safe="")
 
 
@@ -260,22 +261,22 @@ class GitLab:
                 return json.load(response), response.headers
         except HTTPError as exc:
             # Não inclui corpo de resposta, headers ou credenciais na mensagem.
-            raise RuntimeError(f"GitLab retornou HTTP {exc.code}; estado anterior preservado.") from None
+            raise RuntimeError(f"GitLab returned HTTP {exc.code}; previous state preserved.") from None
         except (URLError, TimeoutError, OSError):
-            raise RuntimeError("Falha de conexão com o GitLab; estado anterior preservado.") from None
+            raise RuntimeError("Connection to GitLab failed; previous state preserved.") from None
 
     def pages(self, path, **params):
         page = 1
         while True:
             batch, headers = self.get(path, per_page=100, page=page, **params)
             if not isinstance(batch, list):
-                raise ValueError("Resposta inesperada na listagem do GitLab.")
+                raise ValueError("Unexpected response while listing from GitLab.")
             yield from batch
             next_page = headers.get("X-Next-Page")
             if next_page:
                 following = int(next_page)
                 if following <= page:
-                    raise ValueError("Paginação inválida na resposta do GitLab.")
+                    raise ValueError("Invalid pagination in GitLab's response.")
                 page = following
             elif next_page is not None or len(batch) < 100:
                 return
@@ -311,13 +312,13 @@ class GitLab:
             with self.opener.open(request, timeout=30) as response:
                 body = json.load(response)
         except HTTPError as exc:
-            raise RuntimeError(f"GitLab retornou HTTP {exc.code}; estado anterior preservado.") from None
+            raise RuntimeError(f"GitLab returned HTTP {exc.code}; previous state preserved.") from None
         except (URLError, TimeoutError, OSError):
-            raise RuntimeError("Falha de conexão com o GitLab; estado anterior preservado.") from None
+            raise RuntimeError("Connection to GitLab failed; previous state preserved.") from None
         if body.get("errors"):
             # Não repete a query nem variáveis na mensagem: evita vazar o
             # alvo (e, em tese, filtros) em logs externos.
-            raise RuntimeError("GitLab recusou a consulta GraphQL; estado anterior preservado.")
+            raise RuntimeError("GitLab rejected the GraphQL query; previous state preserved.")
         return body["data"]
 
     def namespace(self, project):
@@ -368,11 +369,20 @@ class GitLab:
                     iid
                     title
                     createdAt
+                    updatedAt
                     upvotes
                     webPath
+                    mergeable
+                    conflicts
                     author {{ username }}
                     headPipeline {{ id status }}
                     project {{ id }}
+                    awardEmoji(first: 100) {{
+                      nodes {{
+                        name
+                        user {{ username }}
+                      }}
+                    }}
                     discussions(first: 100) {{
                       nodes {{
                         id
@@ -424,12 +434,19 @@ def graphql_row(node, web_root):
     (o GraphQL devolve o enum em maiúsculas, ex. "SUCCESS").
     """
     pipeline = node["headPipeline"]
+    # "thumbsup" é a mesma reação que upvotes conta; outros emojis (❤️, 🎉...)
+    # não são "like" para o monitor e ficam de fora da lista de quem curtiu.
+    likers = [item["user"]["username"] for item in node["awardEmoji"]["nodes"]
+              if item["name"] == "thumbsup" and item.get("user")]
     return {
         "iid": node["iid"], "title": node["title"], "upvotes": node["upvotes"],
-        "created_at": node["createdAt"], "author": node["author"] or {},
+        "created_at": node["createdAt"], "updated_at": node["updatedAt"],
+        "author": node["author"] or {},
         "web_url": web_root + node["webPath"],
         "head_pipeline": None if pipeline is None else {
             "id": pipeline["id"], "status": pipeline["status"].lower()},
+        "mergeable": node["mergeable"], "conflicts": node["conflicts"],
+        "likers": likers,
     }
 
 
@@ -469,12 +486,14 @@ def discussion_snapshot(discussion):
 
 
 def pipeline_label(value):
-    return "sem pipeline" if value is None else f'#{value["id"]} {value["status"]}'
+    return "no pipeline" if value is None else f'#{value["id"]} {value["status"]}'
 
 
-REPORT_COLUMNS = (("likes", "Likes", 8), ("mr", "MR", 54), ("author", "Autor", 18),
-                  ("threads", "Threads", 15), ("openers", "Devs que abriram threads", 30),
-                  ("pipeline", "Pipeline Status", 16), ("created_label", "Criado em", 12))
+REPORT_COLUMNS = (("likes", "Likes", 8), ("mr", "MR", 54), ("author", "Author", 18),
+                  ("threads", "Threads", 15), ("openers", "Thread openers", 30),
+                  ("mergeable", "Mergeable", 15), ("conflicts", "Conflicts", 15),
+                  ("pipeline", "Pipeline Status", 16), ("updated_label", "Updated", 13),
+                  ("created_label", "Created", 12))
 
 # Só emoji de largura leste-asiática W: os de largura ambígua são desenhados
 # com duas colunas por muitos terminais e desalinhariam a tabela.
@@ -506,6 +525,12 @@ PIPELINE_TONES = {"success": "success", "failed": "danger", "running": "info",
                   "created": "warning", "preparing": "warning", "pending": "warning",
                   "waiting_for_resource": "warning"}
 
+# mergeable/conflicts vêm da GraphQL (ver GitLab.acompanhar); ausentes em dados
+# de teste mais antigos, daí o rótulo de "desconhecido" para None.
+UNKNOWN_LABEL = "— unknown"
+MERGEABLE_LABEL = {True: "\N{WHITE HEAVY CHECK MARK} mergeable", False: "\N{CROSS MARK} blocked"}
+CONFLICT_LABEL = {True: "\N{CROSS MARK} conflict", False: "\N{WHITE HEAVY CHECK MARK} no conflict"}
+
 
 def project_label(web_url):
     """BE/FE para os repositórios do time; nome curto para qualquer outro."""
@@ -536,7 +561,7 @@ def thread_summary(discussions):
 def pipeline_status(pipeline):
     """Status da pipeline do MR; estado desconhecido aparece como veio da API."""
     if pipeline is None:
-        return "— sem pipeline"
+        return "— no pipeline"
     return PIPELINE_STATUS.get(pipeline["status"], f'\N{BULLET} {pipeline["status"]}')
 
 
@@ -551,17 +576,55 @@ def created_at(value):
         return EPOCH
 
 
+# Limiar, singular e plural de cada unidade, da mais larga para a mais
+# estreita: a primeira que caiba na diferença decide a unidade exibida,
+# como o GitLab faz na própria página ("3 hours ago", "23 minutes ago").
+RELATIVE_UNITS = (
+    (365 * 86400, "year", "years"), (30 * 86400, "month", "months"),
+    (86400, "day", "days"), (3600, "hour", "hours"), (60, "minute", "minutes"),
+)
+
+
+def relative_time(moment, now=None):
+    """"3 hours ago", "23 minutes ago": mesma granularidade da página do GitLab.
+
+    now é parâmetro só para teste determinístico; na operação normal é
+    sempre o instante da própria consulta, recalculado a cada ciclo.
+    """
+    if moment <= EPOCH:
+        return "—"
+    segundos = ((now or datetime.now(timezone.utc)) - moment).total_seconds()
+    if segundos < 60:
+        return "just now"
+    for duracao, singular, plural in RELATIVE_UNITS:
+        quantidade = int(segundos // duracao)
+        if quantidade >= 1:
+            return f"{quantidade} {singular if quantidade == 1 else plural} ago"
+    return "just now"  # inalcançável: minuto já cobriu segundos >= 60
+
+
 def report_row(row, discussions, mine=False):
     total, resolved, openers = thread_summary(discussions)
     created = created_at(row.get("created_at"))
+    updated = created_at(row.get("updated_at"))
+    mergeable = row.get("mergeable")
+    conflicts = row.get("conflicts")
     return {
         "likes": f'{row["upvotes"]} \N{THUMBS UP SIGN}' + (f" {MINE_MARK}" if mine else ""),
         "mine": mine,
+        # Quem reagiu com 👍, pelo awardEmoji da mesma consulta; mostrado
+        # abaixo da contagem no painel web, sem chamada extra ao GitLab.
+        "likers": list(row.get("likers") or []),
         "mr": f'{project_label(row["web_url"])} #{row["iid"]} {row["title"]}',
         # Campos que o monitoramento não exigia: ausência não derruba o ciclo.
         "author": (row.get("author") or {}).get("username", "—"),
-        "threads": f"{resolved}/{total} resolvidas" if total else "sem threads",
+        "threads": f"{resolved}/{total} resolved" if total else "no threads",
         "openers": ", ".join(openers) or "—",
+        "mergeable": MERGEABLE_LABEL.get(mergeable, UNKNOWN_LABEL),
+        # Só o estado-problema (bloqueado) ganha destaque; mesclável é o normal.
+        "mergeable_tone": "danger" if mergeable is False else None,
+        "conflicts": CONFLICT_LABEL.get(conflicts, UNKNOWN_LABEL),
+        "conflicts_tone": "danger" if conflicts else None,
         "pipeline": pipeline_status(row["head_pipeline"]),
         # Tons só são usados pelo HTML; o terminal ignora estes campos.
         "pipeline_tone": PIPELINE_TONES.get((row["head_pipeline"] or {}).get("status")),
@@ -572,6 +635,10 @@ def report_row(row, discussions, mine=False):
         "url": row["web_url"],
         "created": created,
         "created_label": f"{created:%d/%m/%Y}" if created > EPOCH else "—",
+        # Relativo, como a própria página do GitLab mostra ("3 hours ago");
+        # a data e hora exatas ficam só no título do elemento, na web.
+        "updated_label": relative_time(updated),
+        "updated_title": f"{updated:%d/%m/%Y %H:%M}" if updated > EPOCH else "",
         # Valores crus, usados só para ordenar e filtrar no painel.
         "upvotes": row["upvotes"],
         "unresolved": total - resolved,
@@ -636,7 +703,7 @@ def discussion_changes(old, new):
     # cobertas pela diferença de quantidade, não geram evento duplicado.
     changes = []
     if len(old) != len(new):
-        changes.append(f'DISCUSSÕES {len(old)} → {len(new)}')
+        changes.append(f'DISCUSSIONS {len(old)} → {len(new)}')
     resolved = reopened = replied = 0
     for discussion_id, current in new.items():
         previous = old.get(discussion_id)
@@ -650,11 +717,11 @@ def discussion_changes(old, new):
         if current["notes_count"] > previous["notes_count"]:
             replied += 1
     if resolved:
-        changes.append(f'{resolved} DISCUSSÃO(ÕES) RESOLVIDA(S)')
+        changes.append(f'{resolved} DISCUSSION(S) RESOLVED')
     if reopened:
-        changes.append(f'{reopened} DISCUSSÃO(ÕES) REABERTA(S)')
+        changes.append(f'{reopened} DISCUSSION(S) REOPENED')
     if replied:
-        changes.append(f'{replied} DISCUSSÃO(ÕES) COM NOVA RESPOSTA')
+        changes.append(f'{replied} DISCUSSION(S) WITH NEW REPLY')
     return changes
 
 
@@ -696,10 +763,10 @@ def scan(client, project, previous=None):
         header = f'!{iid.split(":")[-1]} — {row["title"]}'
         changes = []
         if old is None:
-            changes.append("NOVO MR ABERTO")
+            changes.append("NEW MR OPENED")
         elif new is None:
-            changes.append({"merged": "MESCLADO", "closed": "FECHADO"}.get(
-                removed[iid], f"SAIU DOS ABERTOS ({removed[iid]})"))
+            changes.append({"merged": "MERGED", "closed": "CLOSED"}.get(
+                removed[iid], f"LEFT THE OPEN LIST ({removed[iid]})"))
         else:
             if old["likes"] != new["likes"]:
                 changes.append(f'LIKES {old["likes"]} → {new["likes"]}')
@@ -758,27 +825,27 @@ def notify(title, message):
                    "-EncodedCommand", encoded]
         options.update(timeout=45, input=json.dumps({
             "title": windows_text(title, 63),
-            "message": windows_text(message or "Atualização no monitor GitLab.", 255),
+            "message": windows_text(message or "Update in GitLab Monitor.", 255),
         }, ensure_ascii=True), text=True, encoding="utf-8", errors="replace")
     else:
-        log(f"Notificações nativas indisponíveis nesta plataforma: {sys.platform}.")
+        log(f"Native notifications aren't available on this platform: {sys.platform}.")
         return False
     executable = shutil.which(command[0])
     if not executable:
-        hint = " Instale libnotify-bin no Ubuntu Desktop." if sys.platform.startswith("linux") else ""
-        log(f"Notificação indisponível: executável {command[0]} não encontrado.{hint}")
+        hint = " Install libnotify-bin on Ubuntu Desktop." if sys.platform.startswith("linux") else ""
+        log(f"Notification unavailable: executable {command[0]} not found.{hint}")
         return False
     command[0] = executable
     try:
         subprocess.run(command, check=True, capture_output=True, **options)
         return True
     except subprocess.TimeoutExpired:
-        log(f"Falha de notificação ({Path(executable).name}): tempo limite de {options['timeout']} s excedido.")
+        log(f"Notification failed ({Path(executable).name}): timeout of {options['timeout']}s exceeded.")
     except subprocess.CalledProcessError as exc:
         detail = notification_error_detail(exc.stderr)
-        log(f"Falha de notificação ({Path(executable).name}): código {exc.returncode}. {detail}")
+        log(f"Notification failed ({Path(executable).name}): exit code {exc.returncode}. {detail}")
     except OSError as exc:
-        log(f"Falha ao iniciar notificador ({Path(executable).name}): {notification_error_detail(str(exc))}")
+        log(f"Failed to start notifier ({Path(executable).name}): {notification_error_detail(str(exc))}")
     return False
 
 
@@ -813,7 +880,7 @@ def acquire_lock(path):
             msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
         except OSError:
             handle.close()
-            raise ValueError("Já existe um monitor ativo para este projeto.") from None
+            raise ValueError("A monitor is already running for this project.") from None
     else:
         import fcntl
         handle = path.open("a")
@@ -821,7 +888,7 @@ def acquire_lock(path):
             fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             handle.close()
-            raise ValueError("Já existe um monitor ativo para este projeto.") from None
+            raise ValueError("A monitor is already running for this project.") from None
     return handle
 
 
@@ -834,8 +901,8 @@ ASSETS = Path(__file__).resolve().parent / "web"
 STYLE_FILES = ("styles/tokens.css", "styles/base.css", "styles/components/card.css",
                "styles/components/table.css", "styles/components/badge.css",
                "styles/components/button.css", "styles/components/toolbar.css",
-               "styles/components/form.css", "styles/components/feedback.css",
-               "styles/responsive.css")
+               "styles/components/columns.css", "styles/components/form.css",
+               "styles/components/feedback.css", "styles/responsive.css")
 
 PLACEHOLDER = re.compile(r"\{\{\s*(\w+)\s*\}\}")
 
@@ -865,13 +932,13 @@ def stylesheet():
 # Ordenações oferecidas na barra da tabela. A lista já vem por data decrescente,
 # e a ordenação do Python é estável: cada critério abaixo desempata por data.
 SORTS = (
-    ("recente", "Mais recentes", None),
-    ("likes", "Mais likes", lambda row: -row["upvotes"]),
+    ("recente", "Most recent", None),
+    ("likes", "Most likes", lambda row: -row["upvotes"]),
     ("mr", "MR (A–Z)", lambda row: row["mr"].casefold()),
-    ("autor", "Autor (A–Z)", lambda row: row["author"].casefold()),
-    ("threads", "Não resolvidas primeiro", lambda row: -row["unresolved"]),
-    ("revisores", "Devs que abriram threads", lambda row: row["openers"].casefold()),
-    ("pipeline", "Status da pipeline", lambda row: PIPELINE_ORDER.get(row["status"], 50)),
+    ("autor", "Author (A–Z)", lambda row: row["author"].casefold()),
+    ("threads", "Unresolved first", lambda row: -row["unresolved"]),
+    ("revisores", "Thread openers", lambda row: row["openers"].casefold()),
+    ("pipeline", "Pipeline status", lambda row: PIPELINE_ORDER.get(row["status"], 50)),
 )
 
 SORT_KEYS = {name: key for name, _, key in SORTS}
@@ -893,7 +960,7 @@ def filter_options(rows):
         "authors": [{"value": author, "label": author} for author in authors],
         "pipelines": [{"value": status or NO_PIPELINE,
                        "label": pipeline_status({"status": status}) if status
-                       else "sem pipeline"}
+                       else "no pipeline"}
                       for status in statuses],
     }
 
@@ -944,8 +1011,8 @@ def mark_changes(rows, previous):
 def change_mark(row, key):
     if key not in row.get("changed", ()):
         return ""
-    return (f'<span class="changed" role="img" aria-label="alterado desde a '
-            f'consulta anterior" title="Alterado desde a consulta anterior">'
+    return (f'<span class="changed" role="img" aria-label="changed since the '
+            f'last check" title="Changed since the last check">'
             f"{CHANGE_MARK}</span>")
 
 
@@ -961,6 +1028,12 @@ def cell_value(row, key):
     if key == "likes":
         mine = f" {MINE_MARK}" if row.get("mine") else ""
         return badge(f'\N{THUMBS UP SIGN} {row["upvotes"]}{mine}', row.get("likes_tone"))
+    if key in ("mergeable", "conflicts"):
+        return badge(str(row[key]), row.get(f"{key}_tone"))
+    if key == "updated_label" and row.get("updated_title"):
+        # Data e hora exatas aparecem ao passar o mouse, igual à própria
+        # página do GitLab sobre o texto relativo.
+        return f'<time title="{escape(row["updated_title"], quote=True)}">{escape(row["updated_label"])}</time>'
     return escape(str(row[key]))
 
 
@@ -971,9 +1044,9 @@ def render_cell(row, key):
             f"{cell_value(row, key)}</span>")
 
 
-LOADING_MESSAGE = "Consultando o GitLab…"
-EMPTY_TARGET_MESSAGE = "Nenhum MR aberto no alvo."
-EMPTY_FILTER_MESSAGE = "Nenhum MR corresponde aos filtros."
+LOADING_MESSAGE = "Querying GitLab…"
+EMPTY_TARGET_MESSAGE = "No open MRs for this target."
+EMPTY_FILTER_MESSAGE = "No MRs match the filters."
 
 
 def empty_message(collected, filtered):
@@ -983,16 +1056,35 @@ def empty_message(collected, filtered):
     return EMPTY_FILTER_MESSAGE if filtered else EMPTY_TARGET_MESSAGE
 
 
+def likers_markup(row):
+    """Nomes de quem reagiu com 👍, abaixo do emblema de likes.
+
+    Fora do <span class="cell"> (de propósito: esse invólucro é linha única,
+    ver table.css), para poder cair numa segunda linha dentro da célula.
+    """
+    likers = row.get("likers") or []
+    if not likers:
+        return ""
+    return f'<div class="likers">{escape(", ".join(likers))}</div>'
+
+
 def render_fragment(rows, collected=True, filtered=False):
     """Todo texto vindo do GitLab passa por escape antes de entrar na página."""
     if not rows:
         return component("empty", message=empty_message(collected, filtered))
-    headers = "".join(f"<th>{escape(header)}</th>" for _, header, _ in REPORT_COLUMNS)
+    # <col> fixa a largura de cada coluna no font-size da tabela (o padrão,
+    # 16px): width em "ch" direto no <th> variava com o font-size menor do
+    # cabeçalho (font-size-xs), dando uma coluna mais estreita ali do que no
+    # corpo e quebrando palavras como "MERGEABLE" ao meio.
+    colgroup = "".join(f'<col class="{key}">' for key, _, _ in REPORT_COLUMNS)
+    headers = "".join(f'<th class="{key}">{escape(header)}</th>' for key, header, _ in REPORT_COLUMNS)
     body = "".join(
-        "<tr>" + "".join(f'<td class="{key}">{render_cell(row, key)}</td>'
-                         for key, _, _ in REPORT_COLUMNS) + "</tr>"
+        "<tr>" + "".join(
+            f'<td class="{key}">{render_cell(row, key)}'
+            f'{likers_markup(row) if key == "likes" else ""}</td>'
+            for key, _, _ in REPORT_COLUMNS) + "</tr>"
         for row in rows)
-    return component("table", headers=headers, rows=body)
+    return component("table", colgroup=colgroup, headers=headers, rows=body)
 
 
 def sort_options(selected="recente"):
@@ -1001,10 +1093,20 @@ def sort_options(selected="recente"):
         f"{escape(label)}</option>" for name, label, _ in SORTS)
 
 
+def column_options():
+    """Uma checkbox por coluna; a visibilidade é decidida só no navegador,
+    via localStorage (ver web/scripts/columns.js e panel.js)."""
+    return "".join(
+        f'<label class="field field--check columns__item">'
+        f'<input type="checkbox" class="columns__toggle" value="{key}" checked>'
+        f'<span>{escape(label)}</span></label>'
+        for key, label, _ in REPORT_COLUMNS)
+
+
 def page_meta(project, shown, total, updated):
-    count = f"{shown} MR(s)" if shown == total else f"{shown} de {total} MR(s)"
-    return (f"{project} · {count} · atualizado em {updated:%d/%m/%Y %H:%M:%S}" if updated
-            else f"{project} · primeira consulta em andamento")
+    count = f"{shown} MR(s)" if shown == total else f"{shown} of {total} MR(s)"
+    return (f"{project} · {count} · updated at {updated:%d/%m/%Y %H:%M:%S}" if updated
+            else f"{project} · first query in progress")
 
 
 def render_html(rows, project, interval, updated=None):
@@ -1015,10 +1117,12 @@ def render_html(rows, project, interval, updated=None):
         styles=stylesheet(),
         script=asset("scripts/panel.js"),
         theme_script=asset("scripts/theme.js"),
+        columns_script=asset("scripts/columns.js"),
         meta=escape(page_meta(project, len(rows), len(rows), updated)),
         settings=component("settings", project=escape(project, quote=True),
                            interval=f"{interval:g}"),
         toolbar=component("toolbar", sort_options=sort_options()),
+        columns=component("columns", options=column_options()),
         legend=component("legend", mark=CHANGE_MARK, mine=MINE_MARK),
         # Sem consulta concluída, a tabela está carregando, não vazia.
         table=render_fragment(rows, collected=updated is not None),
@@ -1065,21 +1169,21 @@ def apply_settings(state, payload, base, wake):
     project = str(payload.get("project", "")).strip()
     interval = str(payload.get("interval", "")).strip()
     if not project:
-        raise ValueError("Informe o projeto ou grupo.")
+        raise ValueError("Provide the project or group.")
     target = project_path(project, base)
     try:
         minutes = float(interval)
     except ValueError:
-        raise ValueError("Intervalo deve ser um número de minutos.") from None
+        raise ValueError("Interval must be a number of minutes.") from None
     if not math.isfinite(minutes) or minutes <= 0:
-        raise ValueError("Intervalo deve ser um número positivo e finito.")
+        raise ValueError("Interval must be a positive, finite number.")
     with state["lock"]:
         changed = target != state["project"]
         state["project"], state["interval"] = target, minutes
         if changed:
             state["rows"], state["updated"], state["events"] = [], None, []
-    log(f"Painel: alvo {unquote(target)} a cada {minutes:g} minuto(s), "
-        "só nesta execução.")
+    log(f"Panel: target {unquote(target)} every {minutes:g} minute(s), "
+        "this run only.")
     wake.set()
 
 
@@ -1128,10 +1232,10 @@ def panel_handler(state, base, wake):
                 self.send_error(404)
                 return
             if not self.same_origin():
-                self.reply(403, {"error": "Origem não permitida."})
+                self.reply(403, {"error": "Origin not allowed."})
                 return
             if "application/json" not in (self.headers.get("Content-Type") or ""):
-                self.reply(415, {"error": "Envie JSON."})
+                self.reply(415, {"error": "Send JSON."})
                 return
             if path == "/refresh":
                 # Consulta manual: encurta a espera do ciclo em curso, sem
@@ -1141,13 +1245,13 @@ def panel_handler(state, base, wake):
                 return
             length = int(self.headers.get("Content-Length") or 0)
             if length > 4096:
-                self.reply(413, {"error": "Requisição grande demais."})
+                self.reply(413, {"error": "Request too large."})
                 return
             try:
                 payload = json.loads(self.rfile.read(length).decode("utf-8"))
                 apply_settings(state, payload, base, wake)
             except (ValueError, AttributeError, TypeError) as exc:
-                self.reply(400, {"error": str(exc) or "Valores inválidos."})
+                self.reply(400, {"error": str(exc) or "Invalid values."})
                 return
             self.reply(200, {"ok": True})
 
@@ -1163,7 +1267,7 @@ def announce(events, notifications=True):
     for event in events:
         log(event)
     if events and notifications:
-        notify("GitLab: atualizações nos MRs", "\n\n".join(events))
+        notify("GitLab: MR updates", "\n\n".join(events))
 
 
 def serve_panel(client, project, interval, port, base=""):
@@ -1201,14 +1305,14 @@ def serve_panel(client, project, interval, port, base=""):
                             state["sequence"] += 1
                             state["events"].append({"id": state["sequence"], "text": event})
                         del state["events"][:-50]
-                log(f"Painel atualizado: {len(rows)} MR(s) aberto(s)."
+                log(f"Panel updated: {len(rows)} open MR(s)."
                     if not events else
-                    f"Painel atualizado: {len(rows)} MR(s) aberto(s). "
-                    f"{len(events)} alteração(ões).")
+                    f"Panel updated: {len(rows)} open MR(s). "
+                    f"{len(events)} change(s).")
                 announce(events, notifications=False)
             except (RuntimeError, KeyError, TypeError) as exc:
                 message = (str(exc) if isinstance(exc, RuntimeError)
-                           else "Resposta inesperada do GitLab; tabela anterior preservada.")
+                           else "Unexpected response from GitLab; previous table preserved.")
                 with state["lock"]:
                     state["error"] = message
                 log(message)
@@ -1223,10 +1327,11 @@ def serve_panel(client, project, interval, port, base=""):
     worker = threading.Thread(target=refresh, daemon=True)
     worker.start()
     server = ThreadingHTTPServer(("127.0.0.1", port), panel_handler(state, base, wake))
-    log(f"Painel em http://127.0.0.1:{server.server_port}/ "
-        f"(atualiza a cada {interval:g} minuto(s)). Ctrl+C encerra.")
-    log("As mudanças saem aqui no terminal e, na tela, pelo navegador: a página "
-        "já vem com as notificações ligadas e pede a permissão na primeira vez.")
+    log(f"Panel at http://127.0.0.1:{server.server_port}/ "
+        f"(updates every {interval:g} minute(s)). Ctrl+C to stop.")
+    log("Changes are logged here in the terminal and, on screen, through the "
+        "browser: the page ships with notifications on and asks for permission "
+        "the first time.")
     try:
         server.serve_forever()
     finally:
@@ -1246,12 +1351,12 @@ def show_panel(client, project, interval, notifications=True):
             current, events, rows = scan(client, project, previous)
         except (RuntimeError, KeyError, TypeError) as exc:
             log(str(exc) if isinstance(exc, RuntimeError)
-                else "Resposta inesperada do GitLab; tabela anterior preservada.")
+                else "Unexpected response from GitLab; previous table preserved.")
         else:
             if sys.stdout.isatty():
                 print("\033[H\033[J", end="")
-            log(f"{len(rows)} MR(s) aberto(s). Atualiza a cada {interval:g} minuto(s). "
-                "Ctrl+C encerra.")
+            log(f"{len(rows)} open MR(s). Updates every {interval:g} minute(s). "
+                "Ctrl+C to stop.")
             if rows:
                 print(render_table(rows))
             # Os eventos ficam abaixo da tabela, até o próximo redesenho.
@@ -1260,61 +1365,61 @@ def show_panel(client, project, interval, notifications=True):
         time.sleep(max(1, seconds - (time.monotonic() - started)))
 
 
-MODES = (("1", "monitorar", "Monitoramento"),
-         ("2", "relatorio", "Relatório atual"),
-         ("3", "painel", "Painel no terminal (tabela que se atualiza)"),
-         ("4", "web", "Painel no navegador (tabela servida em localhost)"))
+MODES = (("1", "monitorar", "Monitoring"),
+         ("2", "relatorio", "Current report"),
+         ("3", "painel", "Terminal panel (self-refreshing table)"),
+         ("4", "web", "Browser panel (table served on localhost)"))
 
 
 def choose_mode():
     """Sem terminal interativo (make, cron, pipe), segue em monitoramento."""
     if not sys.stdin.isatty():
         return "monitorar"
-    print("Modo de execução:")
+    print("Execution mode:")
     for number, _, description in MODES:
         print(f"  {number} - {description}")
     options = {number: name for number, name, _ in MODES}
     while True:
         try:
-            answer = input("Escolha [1]: ").strip() or "1"
+            answer = input("Choose [1]: ").strip() or "1"
         except EOFError:
             return "monitorar"
         if answer in options:
             return options[answer]
         numbers = list(options)
-        print(f"Opção inválida: digite {', '.join(numbers[:-1])} ou {numbers[-1]}.")
+        print(f"Invalid option: type {', '.join(numbers[:-1])} or {numbers[-1]}.")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("project", nargs="?",
-                         help="URL de projeto ou grupo (/-/merge_requests); caminho ou ID de projeto. "
-                              "Sobrescreve PROJECT do .env; sem ele, vale PROJECT")
-    parser.add_argument("--test-notify", action="store_true", help="Testa a notificação nativa sem .env nem API")
+                         help="Project or group URL (/-/merge_requests); project path or ID. "
+                              "Overrides PROJECT from .env; without it, PROJECT is used")
+    parser.add_argument("--test-notify", action="store_true", help="Test the native notification without .env or API")
     parser.add_argument("--mode", choices=[name for _, name, _ in MODES],
-                         help="monitorar acompanha e avisa cada mudança; relatorio consulta uma "
-                              "vez e imprime a tabela; painel repete a tabela no terminal; web "
-                              "serve a tabela em localhost. Sem a opção, é perguntado no terminal")
-    parser.add_argument("--port", type=int, default=8765, metavar="PORTA",
-                         help="Porta do modo web em 127.0.0.1 (padrão: 8765)")
-    parser.add_argument("--interval", type=float, default=None, metavar="MINUTOS",
-                         help="Intervalo em minutos. Sobrescreve INTERVAL do .env; sem ambos, 15")
-    parser.add_argument("--once", action="store_true", help="Consulta uma vez e encerra")
+                         help="monitorar tracks and alerts on every change; relatorio queries once "
+                              "and prints the table; painel repeats the table in the terminal; web "
+                              "serves the table on localhost. Without this option, you're prompted in the terminal")
+    parser.add_argument("--port", type=int, default=8765, metavar="PORT",
+                         help="Port for web mode on 127.0.0.1 (default: 8765)")
+    parser.add_argument("--interval", type=float, default=None, metavar="MINUTES",
+                         help="Interval in minutes. Overrides INTERVAL from .env; if neither is set, 15")
+    parser.add_argument("--once", action="store_true", help="Query once and exit")
     parser.add_argument("--no-notify", action="store_true",
-                         help="Desativa notificações nativas (macOS, Linux via notify-send, Windows via PowerShell)")
+                         help="Disable native notifications (macOS, Linux via notify-send, Windows via PowerShell)")
     parser.add_argument("--keep-history", default="false", metavar="TRUE|FALSE",
-                         help="Preserva a referência desta sessão em gitlab-history/ ao encerrar "
-                              "(padrão: false, apaga ao sair)")
+                         help="Preserve this session's reference in gitlab-history/ on exit "
+                              "(default: false, deleted on exit)")
     args = parser.parse_args()
     if args.test_notify:
-        return 0 if notify("GitLab Monitor", "Teste de notificação: acentos, seta → e emoji 👍.") else 1
+        return 0 if notify("GitLab Monitor", "Notification test: accents, arrow → and emoji 👍.") else 1
     try:
         defaults = env_defaults(ROOT / ".env")
     except ValueError as exc:
         parser.error(str(exc))
     project_arg = args.project or defaults.get("PROJECT")
     if not project_arg:
-        parser.error("Informe o projeto no comando, defina PROJECT no .env ou use --test-notify.")
+        parser.error("Provide the project on the command line, set PROJECT in .env, or use --test-notify.")
     interval = args.interval
     if interval is None:
         raw = defaults.get("INTERVAL")
@@ -1324,14 +1429,14 @@ def main():
             try:
                 interval = float(raw)
             except ValueError:
-                parser.error("INTERVAL do .env deve ser um número positivo e finito.")
+                parser.error("INTERVAL in .env must be a positive, finite number.")
             if not math.isfinite(interval) or interval <= 0:
-                parser.error("INTERVAL do .env deve ser um número positivo e finito.")
+                parser.error("INTERVAL in .env must be a positive, finite number.")
     elif not math.isfinite(interval) or interval <= 0:
-        parser.error("--interval deve ser um número positivo e finito.")
+        parser.error("--interval must be a positive, finite number.")
     keep_history = args.keep_history.strip().lower()
     if keep_history not in ("true", "false"):
-        parser.error("--keep-history deve ser TRUE ou FALSE.")
+        parser.error("--keep-history must be TRUE or FALSE.")
     keep_history = keep_history == "true"
     mode = args.mode or choose_mode()
     lock = None
@@ -1346,9 +1451,9 @@ def main():
             try:
                 rows = report(client, project)
             except (RuntimeError, KeyError, TypeError) as exc:
-                log(str(exc) if isinstance(exc, RuntimeError) else "Resposta inesperada do GitLab.")
+                log(str(exc) if isinstance(exc, RuntimeError) else "Unexpected response from GitLab.")
                 return 1
-            log(f"Relatório de {unquote(project)}: {len(rows)} MR(s) aberto(s).")
+            log(f"Report for {unquote(project)}: {len(rows)} open MR(s).")
             if rows:
                 print(render_table(rows))
             return 0
@@ -1366,9 +1471,9 @@ def main():
         if path.exists():
             stored = json.loads(path.read_text(encoding="utf-8"))
             if stored["version"] != 2 or not isinstance(stored["mrs"], dict):
-                raise ValueError("Arquivo de estado incompatível; preserve-o e mova-o para reiniciar a referência.")
+                raise ValueError("Incompatible state file; keep it and move it aside to restart the reference.")
             previous = stored["mrs"]
-        log(f"Monitorando {unquote(project)} a cada {interval:g} minuto(s). Ctrl+C encerra.")
+        log(f"Monitoring {unquote(project)} every {interval:g} minute(s). Ctrl+C to stop.")
         last_error = None
         try:
             while True:
@@ -1377,22 +1482,22 @@ def main():
                     current, events = collect(client, project, previous)
                     save(path, {"version": 2, "checked_at": datetime.now().astimezone().isoformat(), "mrs": current})
                     if previous is None:
-                        log(f"Referência inicial salva: {len(current)} MR(s) aberto(s).")
+                        log(f"Initial reference saved: {len(current)} open MR(s).")
                     else:
                         for event in events:
                             log(event)
-                        log(f"MRs abertos: {len(previous)} → {len(current)}. {len(events)} alteração(ões).")
+                        log(f"Open MRs: {len(previous)} → {len(current)}. {len(events)} change(s).")
                     previous = current
                     if events and not args.no_notify:
-                        notify("GitLab: atualizações nos MRs", "\n\n".join(events))
+                        notify("GitLab: MR updates", "\n\n".join(events))
                     if last_error:
-                        log("Conexão e comparação restabelecidas.")
+                        log("Connection and comparison restored.")
                     last_error = None
                 except (RuntimeError, ValueError, KeyError, TypeError, OSError) as exc:
-                    message = str(exc) if isinstance(exc, RuntimeError) else "Falha ao ler resposta ou salvar estado; referência anterior preservada."
+                    message = str(exc) if isinstance(exc, RuntimeError) else "Failed to read response or save state; previous reference preserved."
                     log(message)
                     if not args.no_notify and message != last_error:
-                        notify("GitLab: falha no monitor", message)
+                        notify("GitLab: monitor failure", message)
                     last_error = message
                     if args.once:
                         return 1
@@ -1403,10 +1508,10 @@ def main():
             if not keep_history:
                 path.unlink(missing_ok=True)
     except KeyboardInterrupt:
-        log("Monitor encerrado.")
+        log("Monitor stopped.")
         return 0
     except (ValueError, KeyError, TypeError, OSError):
-        log("Não foi possível iniciar. Confira o .env, o projeto, a porta do modo web, as permissões e o estado em gitlab-history/; verifique se outro monitor já está ativo.")
+        log("Could not start. Check the .env file, the project, the web mode port, permissions, and the state in gitlab-history/; verify no other monitor is already running.")
         return 1
     finally:
         if lock is not None:

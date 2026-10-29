@@ -1,21 +1,21 @@
 <form class="card settings" id="settings">
   <div class="field">
-    <label for="project">Projeto ou grupo</label>
+    <label for="project">Project or group</label>
     <input id="project" name="project" value="{{project}}"
-           placeholder="grupo/projeto ou URL" autocomplete="off">
+           placeholder="group/project or URL" autocomplete="off">
   </div>
   <div class="field field--small">
-    <label for="interval">Intervalo (min)</label>
+    <label for="interval">Interval (min)</label>
     <input id="interval" name="interval" value="{{interval}}" inputmode="decimal"
            autocomplete="off">
   </div>
   <label class="field field--check">
     <input type="checkbox" id="notify" checked>
-    <span>Notificar no navegador</span>
+    <span>Notify in browser</span>
   </label>
-  <button type="button" class="button" id="test-notify">Testar notificação</button>
-  <button type="button" class="button" id="refresh">Verificar agora</button>
-  <button type="submit" class="button button--primary">Salvar</button>
+  <button type="button" class="button" id="test-notify">Test notification</button>
+  <button type="button" class="button" id="refresh">Check now</button>
+  <button type="submit" class="button button--primary">Save</button>
 </form>
-<p class="notice">Os valores valem só enquanto este painel estiver aberto; o
-<code>.env</code> não é alterado.</p>
+<p class="notice">These values are valid only while this panel stays open; the
+<code>.env</code> file isn't changed.</p>

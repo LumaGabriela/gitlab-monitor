@@ -146,7 +146,7 @@ class WindowsPowerShellTests(unittest.TestCase):
                         result = monitor.notify(title, message)
                         if mode == "error":
                             self.assertFalse(result)
-                            self.assertIn("código 1", log.call_args.args[0])
+                            self.assertIn("exit code 1", log.call_args.args[0])
                             self.assertIn("Simulated desktop unavailable", log.call_args.args[0])
                         else:
                             self.assertTrue(result, log.call_args_list)

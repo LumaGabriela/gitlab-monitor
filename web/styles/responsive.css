@@ -1,6 +1,19 @@
 /* Media query é a única medida fora dos tokens: custom properties do CSS
    não são avaliadas em condições de @media. */
+
+/* Telas médias (tablet): os campos de filtro e configuração ocupam a linha
+   inteira em vez de espremer uns contra os outros, antes de a tabela
+   precisar da própria rolagem (ver .table-scroll em table.css). */
+@media (max-width: 960px) {
+.toolbar .field, .settings .field { flex: 1 1 100%; }
+.toolbar .field--theme { margin-left: 0; }
+.settings .field--small { flex: 1 1 100%; }
+}
+
 @media (max-width: 720px) {
+body { padding: var(--space-4) var(--space-3); }
 th, td { padding: var(--space-2) var(--space-3); }
 .page__title { font-size: var(--font-size-base); }
+.settings .button { flex: 1 1 100%; }
+.columns__item { flex: 1 1 100%; }
 }

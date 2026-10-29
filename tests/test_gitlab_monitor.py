@@ -2,6 +2,7 @@
 
 import base64
 import copy
+from datetime import timedelta
 import json
 import importlib.util
 import os
@@ -25,12 +26,14 @@ import gitlab_monitor as monitor
 
 
 def row(iid, state="opened", likes=0, pipeline=None, author="ana.lima",
-        created="2026-10-01T10:00:00.000Z", project_id=1):
+        created="2026-10-01T10:00:00.000Z", updated=None, project_id=1,
+        mergeable=True, conflicts=False, likers=()):
     return {"iid": iid, "state": state, "title": f"MR {iid}",
             "web_url": f"https://gitlab.example/g/p/-/merge_requests/{iid}",
             "upvotes": likes, "head_pipeline": pipeline,
             "author": {"username": author}, "created_at": created,
-            "project_id": project_id}
+            "updated_at": updated or created, "project_id": project_id,
+            "mergeable": mergeable, "conflicts": conflicts, "likers": list(likers)}
 
 
 def rest_row_to_graphql_node(r, web_root="https://gitlab.example"):
@@ -42,11 +45,15 @@ def rest_row_to_graphql_node(r, web_root="https://gitlab.example"):
     pipeline = r.get("head_pipeline")
     return {
         "iid": r["iid"], "title": r["title"], "createdAt": r["created_at"],
+        "updatedAt": r.get("updated_at", r["created_at"]),
         "upvotes": r["upvotes"], "webPath": r["web_url"].removeprefix(web_root),
         "author": r.get("author") or {},
         "headPipeline": None if pipeline is None else {
             "id": pipeline["id"], "status": pipeline["status"].upper()},
         "project": {"id": f'gid://gitlab/Project/{r.get("project_id", 1)}'},
+        "mergeable": r.get("mergeable", True), "conflicts": r.get("conflicts", False),
+        "awardEmoji": {"nodes": [{"name": "thumbsup", "user": {"username": username}}
+                                 for username in r.get("likers", ())]},
         "discussions": {"nodes": []},
     }
 
@@ -134,7 +141,7 @@ class MonitorTests(unittest.TestCase):
                      patch.object(monitor, "GitLab"), patch.object(monitor, "collect", return_value=({}, [])), \
                      patch.object(monitor, "log", side_effect=logs.append):
                     self.assertEqual(monitor.main(), 0)
-                self.assertIn(f"Monitorando {project} a cada {interval:g} minuto(s)", logs[0])
+                self.assertIn(f"Monitoring {project} every {interval:g} minute(s)", logs[0])
 
     def test_project_is_required_when_env_has_none(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -156,8 +163,8 @@ class MonitorTests(unittest.TestCase):
         previous = {"1": monitor.snapshot(row(1), [])}
         current, events = monitor.collect(Client([row(2)], [row(1, "merged"), row(2)]), "1", previous)
         self.assertEqual(len(current), len(previous))
-        self.assertIn("MESCLADO", events[0])
-        self.assertIn("NOVO MR ABERTO", events[1])
+        self.assertIn("MERGED", events[0])
+        self.assertIn("NEW MR OPENED", events[1])
 
     def test_likes_and_pipeline_status_or_identity(self):
         old = row(1, likes=2, pipeline={"id": 10, "status": "running"})
@@ -193,7 +200,7 @@ class MonitorTests(unittest.TestCase):
         client.rows = {}
         current, events = monitor.collect(client, "1", current)
         self.assertEqual(current, {})
-        self.assertIn("FECHADO", events[0])
+        self.assertIn("CLOSED", events[0])
 
     def test_pagination_gap_self_heals_via_the_exit_check(self):
         # Um MR que a listagem desta passagem não trouxe (paginação, latência)
@@ -326,7 +333,7 @@ class MonitorTests(unittest.TestCase):
         self.assertNotIn("Projeto", events[0] + events[1])
         self.assertEqual(events[0].splitlines(), [
             "!1 — MR 1", "LIKES 0 → 2", "https://gitlab.example/g/p/-/merge_requests/1"])
-        self.assertEqual(events[1].splitlines()[:2], ["!1 — MR 1", "MESCLADO"])
+        self.assertEqual(events[1].splitlines()[:2], ["!1 — MR 1", "MERGED"])
         # O MR que sumiu da listagem (20:1) é confirmado individualmente.
         self.assertEqual(detail.call_args.args, ("groups/g", "20:1"))
 
@@ -371,9 +378,10 @@ class MonitorTests(unittest.TestCase):
 
 
 def merge_request(iid, repo, title, author, likes, state="opened", status=None,
-                  created="2026-10-01T10:00:00.000Z", project_id=1):
+                  created="2026-10-01T10:00:00.000Z", updated=None, project_id=1):
     return {"iid": iid, "state": state, "title": title, "upvotes": likes,
             "author": {"username": author}, "created_at": created,
+            "updated_at": updated or created,
             "head_pipeline": None if status is None else {"id": 1, "status": status},
             "web_url": f"https://gitlab.fpf.br/g/poc-sdd-{repo}/-/merge_requests/{iid}",
             "project_id": project_id}
@@ -413,7 +421,7 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(row["likes"], "2 \N{THUMBS UP SIGN}")
         self.assertEqual(row["mr"], "BE #199 feat(#ANT-8951): cadastro")
         self.assertEqual(row["author"], "geovana.medeiros")
-        self.assertEqual(row["threads"], "3/3 resolvidas")
+        self.assertEqual(row["threads"], "3/3 resolved")
         # Nome de usuário completo, sem repetir quem abriu mais de uma thread.
         self.assertEqual(row["openers"], "heloysa.uchoa, luma.silva")
 
@@ -421,7 +429,7 @@ class ReportTests(unittest.TestCase):
         loose = [{"id": 1, "notes": [{"resolvable": False, "author": {"username": "ana.lima"}}]}]
         row = monitor.report_row(self.mr(7, "frontend", "t", "ana.lima", 0), loose)
         self.assertEqual(row["mr"], "FE #7 t")
-        self.assertEqual(row["threads"], "sem threads")
+        self.assertEqual(row["threads"], "no threads")
         self.assertEqual(row["openers"], "—")
 
     def test_project_label_falls_back_to_the_repository_name(self):
@@ -460,12 +468,12 @@ class ReportTests(unittest.TestCase):
                 monitor.report_row(self.mr(7, "frontend", "curto", "ana.lima", 0), [])]
         table = monitor.render_table(rows, links=False)
         self.assertEqual(len({monitor.text_width(line) for line in table.splitlines()}), 1)
-        self.assertIn("Devs que abriram", table)
+        self.assertIn("Thread openers", table)
         self.assertIn("Pipeline Status", table)
         self.assertIn("BE #199", table)
 
     def test_pipeline_status_covers_absent_and_unknown_states(self):
-        self.assertEqual(monitor.pipeline_status(None), "— sem pipeline")
+        self.assertEqual(monitor.pipeline_status(None), "— no pipeline")
         self.assertEqual(monitor.pipeline_status({"id": 1, "status": "success"}),
                          "\N{WHITE HEAVY CHECK MARK} success")
         self.assertEqual(monitor.pipeline_status({"id": 1, "status": "failed"}),
@@ -567,8 +575,8 @@ class PanelTests(unittest.TestCase):
         self.assertIn("&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;", page)
         self.assertIn('<a href="https://gitlab.example/g/poc-sdd-backend/-/merge_requests/199"'
                       ' target="_blank" rel="noopener noreferrer">', page)
-        for _, header, _ in monitor.REPORT_COLUMNS:
-            self.assertIn(f"<th>{header}</th>", page)
+        for key, header, _ in monitor.REPORT_COLUMNS:
+            self.assertIn(f'<th class="{key}">{header}</th>', page)
 
     def test_page_refreshes_itself_without_meta_refresh(self):
         page = monitor.render_html([], "flake/siga", 15)
@@ -799,15 +807,15 @@ class PanelTests(unittest.TestCase):
         self.assertIn('type="button" class="button" id="test-notify"', page)
         script = monitor.asset("scripts/panel.js")
         self.assertIn("panel.test.addEventListener('click'", script)
-        self.assertIn("Notificação de teste", script)
+        self.assertIn("Test notification", script)
 
     def test_legend_explains_the_change_mark(self):
         page = monitor.render_html([], "flake/siga", 15)
         legenda = page.split('class="legend"')[1].split("</p>")[0]
         self.assertIn(monitor.CHANGE_MARK, legenda)
-        self.assertIn("mudou desde a verificação anterior", legenda)
+        self.assertIn("changed since the last check", legenda)
         self.assertIn(monitor.MINE_MARK, legenda)
-        self.assertIn("seu like está entre eles", legenda)
+        self.assertIn("your like is among them", legenda)
 
     def test_first_load_says_it_is_loading_instead_of_reporting_an_empty_target(self):
         # A primeira consulta leva segundos; dizer "nenhum MR" nesse intervalo
@@ -908,6 +916,45 @@ class PanelTests(unittest.TestCase):
         self.assertIn("badge--strong", monitor.render_fragment([tone(2)]))
         self.assertNotIn("badge--strong", monitor.render_fragment([tone(1)]))
 
+    def test_likers_appear_below_the_likes_badge(self):
+        base = {"iid": 1, "state": "opened", "upvotes": 2, "title": "t",
+                "created_at": "2026-10-19T10:00:00Z", "author": {"username": "ana.lima"},
+                "head_pipeline": None,
+                "web_url": "https://gitlab.example/g/poc-sdd-backend/-/merge_requests/1"}
+        com_likers = monitor.report_row(dict(base, likers=["bia.sa", "cris.me"]), [])
+        html = monitor.render_fragment([com_likers])
+        likes = html.split('<td class="likes">')[1].split("</td>")[0]
+        # Fora do invólucro flex de linha única, para cair abaixo do emblema.
+        self.assertIn('<div class="likers">bia.sa, cris.me</div>', likes)
+        self.assertFalse(likes.split('<div class="likers">')[0].rstrip().endswith("bia.sa, cris.me"))
+        sem_likers = monitor.report_row(base, [])
+        self.assertNotIn("likers", monitor.render_fragment([sem_likers]).split('<td class="likes">')[1].split("</td>")[0])
+
+    def test_mergeable_and_conflicts_columns_show_badges_with_tones(self):
+        base = {"iid": 1, "state": "opened", "upvotes": 0, "title": "t",
+                "created_at": "2026-10-19T10:00:00Z", "author": {"username": "ana.lima"},
+                "head_pipeline": None,
+                "web_url": "https://gitlab.example/g/poc-sdd-backend/-/merge_requests/1"}
+        bloqueado = monitor.report_row(dict(base, mergeable=False, conflicts=True), [])
+        self.assertIn("blocked", bloqueado["mergeable"])
+        self.assertEqual(bloqueado["mergeable_tone"], "danger")
+        self.assertIn("conflict", bloqueado["conflicts"])
+        self.assertEqual(bloqueado["conflicts_tone"], "danger")
+        livre = monitor.report_row(dict(base, mergeable=True, conflicts=False), [])
+        self.assertIn("mergeable", livre["mergeable"])
+        self.assertIsNone(livre["mergeable_tone"])
+        self.assertIn("no conflict", livre["conflicts"])
+        self.assertIsNone(livre["conflicts_tone"])
+        desconhecido = monitor.report_row(base, [])
+        self.assertEqual(desconhecido["mergeable"], monitor.UNKNOWN_LABEL)
+        self.assertEqual(desconhecido["conflicts"], monitor.UNKNOWN_LABEL)
+        html = monitor.render_fragment([bloqueado])
+        self.assertIn("badge--danger", html)
+        for coluna in ("mergeable", "conflicts"):
+            with self.subTest(coluna=coluna):
+                celula = html.split(f'<td class="{coluna}">')[1].split("</td>")[0]
+                self.assertTrue(celula.startswith('<span class="cell">'), celula)
+
     def sample(self):
         def build(iid, repo, author, likes, status, created, total, pending):
             notes = [{"id": index,
@@ -979,7 +1026,7 @@ class PanelTests(unittest.TestCase):
         values = [item["value"] for item in options["pipelines"]]
         self.assertEqual(values, ["failed", "success", monitor.NO_PIPELINE])
         labels = {item["value"]: item["label"] for item in options["pipelines"]}
-        self.assertEqual(labels[monitor.NO_PIPELINE], "sem pipeline")
+        self.assertEqual(labels[monitor.NO_PIPELINE], "no pipeline")
         self.assertIn("failed", labels["failed"])
 
     def test_data_route_applies_sort_and_filter_from_the_query(self):
@@ -1004,28 +1051,63 @@ class PanelTests(unittest.TestCase):
             self.assertIn("3 MR(s)", todos["meta"])
             filtrado = fetch("since=0&author=ana.lima")
             self.assertEqual(filtrado["table"].count("<tr>"), 3)
-            self.assertIn("2 de 3 MR(s)", filtrado["meta"])
+            self.assertIn("2 of 3 MR(s)", filtrado["meta"])
             # Filtro não encolhe as opções oferecidas.
             self.assertEqual(len(filtrado["filters"]["authors"]), 2)
             # Ordenação desconhecida não derruba a rota: cai no padrão.
             self.assertEqual(fetch("since=0&sort=inventado")["table"],
                              fetch("since=0&sort=recente")["table"])
             vazio = fetch("since=0&author=ninguem")
-            self.assertIn("Nenhum MR corresponde aos filtros", vazio["table"])
+            self.assertIn("No MRs match the filters", vazio["table"])
         finally:
             server.shutdown()
             server.server_close()
 
     def test_created_column_is_the_last_one(self):
         key, header, _ = monitor.REPORT_COLUMNS[-1]
-        self.assertEqual((key, header), ("created_label", "Criado em"))
-        self.assertEqual(monitor.REPORT_COLUMNS[-2][0], "pipeline")
+        self.assertEqual((key, header), ("created_label", "Created"))
+        # Atualizado em fica imediatamente à esquerda de Criado em.
+        self.assertEqual(monitor.REPORT_COLUMNS[-2][:2], ("updated_label", "Updated"))
+        self.assertEqual(monitor.REPORT_COLUMNS[-3][0], "pipeline")
         row = monitor.report_row(
             self.mr(1, "backend", "t", "ana.lima", 0, created="2026-10-19T17:45:00Z"), [])
         self.assertEqual(row["created_label"], "19/10/2026")
         self.assertIn("19/10/2026", monitor.render_fragment([row]))
         semdata = monitor.report_row(self.mr(1, "backend", "t", "ana.lima", 0, created=None), [])
         self.assertEqual(semdata["created_label"], "—")
+
+    def test_updated_label_is_relative_like_the_gitlab_page(self):
+        # "updated 3 hours ago" da própria página do GitLab, só que em pt-BR;
+        # a hora exata do relógio real não importa, só a distância até agora.
+        agora = monitor.datetime.now(monitor.timezone.utc)
+        duas_horas_atras = (agora - timedelta(hours=2)).isoformat()
+        row = monitor.report_row(
+            self.mr(1, "backend", "t", "ana.lima", 0, updated=duas_horas_atras), [])
+        self.assertEqual(row["updated_label"], "2 hours ago")
+        self.assertIn(">2 hours ago<", monitor.render_fragment([row]))
+        self.assertIn('title="', monitor.render_fragment([row]))
+        # updated=None no fabricador espelha o created (mesma conveniência de
+        # created=None); "sem dado nenhum" é um updated_at ausente de verdade.
+        sem_dado = dict(self.mr(1, "backend", "t", "ana.lima", 0), updated_at=None)
+        semdata = monitor.report_row(sem_dado, [])
+        self.assertEqual(semdata["updated_label"], "—")
+        self.assertNotIn('title="', monitor.render_fragment([semdata]))
+
+    def test_relative_time_matches_gitlab_granularity(self):
+        base = monitor.datetime(2026, 10, 29, 12, 0, tzinfo=monitor.timezone.utc)
+        casos = [
+            (0, "just now"), (59, "just now"),
+            (60, "1 minute ago"), (120, "2 minutes ago"), (3599, "59 minutes ago"),
+            (3600, "1 hour ago"), (7200, "2 hours ago"), (86399, "23 hours ago"),
+            (86400, "1 day ago"), (172800, "2 days ago"),
+            (30 * 86400, "1 month ago"), (60 * 86400, "2 months ago"),
+            (365 * 86400, "1 year ago"), (2 * 365 * 86400, "2 years ago"),
+        ]
+        for segundos, esperado in casos:
+            with self.subTest(segundos=segundos):
+                momento = base - timedelta(seconds=segundos)
+                self.assertEqual(monitor.relative_time(momento, now=base), esperado)
+        self.assertEqual(monitor.relative_time(monitor.EPOCH, now=base), "—")
 
     def test_server_answers_only_the_root_path(self):
         state = monitor.panel_state("g%2Fp", 15)
@@ -1196,7 +1278,7 @@ class PanelTests(unittest.TestCase):
         self.assertIn("tag: text", script)
         self.assertNotIn("tag: lines[0]", script)
         self.assertIn("MAX_NOTIFICATIONS", script)
-        self.assertIn("atualizações nos MRs", script)
+        self.assertIn("MR updates", script)
 
     def test_permission_hint_has_its_own_line_so_polling_cannot_erase_it(self):
         page = monitor.render_html([], "flake/siga", 15)
@@ -1206,7 +1288,7 @@ class PanelTests(unittest.TestCase):
         # poll() limpa a linha de erro a cada consulta; a dica usa outra.
         self.assertIn("warn(data.error)", script)
         self.assertNotIn("hint(data.error)", script)
-        for mensagem in ("hint('Notificações bloqueadas", "hint('Notificações do navegador ligadas"):
+        for mensagem in ("hint('Notifications blocked", "hint('Browser notifications are on"):
             self.assertIn(mensagem, script)
 
     def test_web_mode_never_uses_the_system_notifier(self):
@@ -1361,9 +1443,9 @@ class NotificationTests(unittest.TestCase):
     def test_failures_report_different_causes_on_both_platforms(self):
         for platform in ("win32", "linux"):
             failures = [
-                (subprocess.CalledProcessError(1, "helper", stderr=b"ParserError / DBus ServiceUnknown"), "código 1", "ServiceUnknown"),
-                (subprocess.TimeoutExpired("helper", 45), "tempo limite", None),
-                (OSError("Access denied"), "iniciar notificador", "Access denied"),
+                (subprocess.CalledProcessError(1, "helper", stderr=b"ParserError / DBus ServiceUnknown"), "exit code 1", "ServiceUnknown"),
+                (subprocess.TimeoutExpired("helper", 45), "timeout", None),
+                (OSError("Access denied"), "start notifier", "Access denied"),
             ]
             for error, expected, detail in failures:
                 with self.subTest(platform=platform, error=type(error).__name__), \

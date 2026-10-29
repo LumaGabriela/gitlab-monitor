@@ -268,17 +268,16 @@ python3 gitlab_monitor.py --mode relatorio
 ```
 
 ```text
-[2026-10-20 11:04:12 -03] Relatório de flake/siga: 4 MR(s) aberto(s).
-┌───────┬──────────────────────────────────┬──────────────────┬────────────────┬──────────────────┬─────────────────┐
-│ Likes │ MR                               │ Autor            │ Threads        │ Devs que abriram │ Pipeline Status │
-│       │                                  │                  │                │ threads          │                 │
-├───────┼──────────────────────────────────┼──────────────────┼────────────────┼──────────────────┼─────────────────┤
-│ 2 👍  │ BE #199 feat(#ANT-8951):         │ geovana.medeiros │ 7/7 resolvidas │ heloysa, luma    │ ✅ success      │
-│       │ cadastro e lista de candidatos   │                  │                │                  │                 │
-├───────┼──────────────────────────────────┼──────────────────┼────────────────┼──────────────────┼─────────────────┤
-│ 1 👍  │ FE #208 feat(#ANT-9057):         │ geovana.medeiros │ 13/13          │ heloysa, luma    │ — sem pipeline  │
-│       │ document management module       │                  │ resolvidas     │                  │                 │
-└───────┴──────────────────────────────────┴──────────────────┴────────────────┴──────────────────┴─────────────────┘
+[2026-10-20 11:04:12 -03] Report for flake/siga: 4 open MR(s).
+┌───────┬──────────────────────────────────┬──────────────────┬─────────────┬────────────────┬─────────────────┐
+│ Likes │ MR                               │ Author           │ Threads     │ Thread openers │ Pipeline Status │
+├───────┼──────────────────────────────────┼──────────────────┼─────────────┼────────────────┼─────────────────┤
+│ 2 👍  │ BE #199 feat(#ANT-8951):         │ geovana.medeiros │ 7/7 resolved│ heloysa, luma  │ ✅ success      │
+│       │ cadastro e lista de candidatos   │                  │             │                │                 │
+├───────┼──────────────────────────────────┼──────────────────┼─────────────┼────────────────┼─────────────────┤
+│ 1 👍  │ FE #208 feat(#ANT-9057):         │ geovana.medeiros │ 13/13       │ heloysa, luma  │ — no pipeline   │
+│       │ document management module       │                  │ resolved    │                │                 │
+└───────┴──────────────────────────────────┴──────────────────┴─────────────┴────────────────┴─────────────────┘
 ```
 
 Todo o conteúdo da coluna **MR** é um link clicável para o próprio Merge Request, inclusive as linhas geradas pela quebra do título. Os links abrem **em nova guia**, com `rel="noopener noreferrer"`, de modo que a guia aberta não ganha referência a esta página e o painel não se perde ao ser clicado. O link usa a sequência OSC 8, aceita por iTerm2, Windows Terminal, GNOME Terminal e pela maioria dos terminais atuais; onde não houver suporte, o texto aparece normalmente e apenas deixa de ser clicável. **Quando a saída não é um terminal** — redirecionada para arquivo ou passada por um pipe — os links são omitidos, para não sujar o texto com códigos de escape.
@@ -287,13 +286,16 @@ Como ler as colunas:
 
 | Coluna | Conteúdo |
 | --- | --- |
-| Likes | Reações 👍 no MR. Não são aprovações. Um ✓ depois do número indica que **o seu like está entre eles**. No painel web, **2 ou mais ganham fundo de destaque**. |
+| Likes | Reações 👍 no MR. Não são aprovações. Um ✓ depois do número indica que **o seu like está entre eles**. No painel web, **2 ou mais ganham fundo de destaque** e, abaixo do número, aparecem os nomes de quem reagiu (ver [O seu like entre os demais](#o-seu-like-entre-os-demais)). |
 | MR | Rótulo do projeto, número e título, como link para o MR. `BE` para repositórios terminados em `-backend` e `FE` para `-frontend`; qualquer outro repositório aparece com o nome curto. O título vem exatamente como está no GitLab. |
-| Autor | Quem abriu o MR. |
-| Threads | Discussões resolvíveis: resolvidas sobre o total. Comentário avulso, que não tem estado de resolução, não entra na conta e aparece como `sem threads` quando o MR só tem comentários desse tipo. |
-| Devs que abriram threads | Nome de usuário de quem iniciou cada thread, sem repetição. `—` quando não há thread. |
+| Author | Quem abriu o MR. |
+| Threads | Discussões resolvíveis: resolvidas sobre o total. Comentário avulso, que não tem estado de resolução, não entra na conta e aparece como `no threads` quando o MR só tem comentários desse tipo. |
+| Thread openers | Nome de usuário de quem iniciou cada thread, sem repetição. `—` quando não há thread. |
+| Mergeable | Se o GitLab permite mesclar o MR agora (`mergeable` da GraphQL): "✅ mergeable" ou "❌ blocked" — pipeline falhando, aprovação pendente ou outro impedimento do próprio GitLab, sem detalhar qual. Só "blocked" ganha destaque (vermelho); "mergeable" é o estado comum e fica neutro. |
+| Conflicts | Se a branch de origem está em conflito com a de destino (`conflicts` da GraphQL): "❌ conflict" ou "✅ no conflict". Só "conflict" ganha destaque; é o estado incomum. |
 | Pipeline Status | Situação da pipeline associada ao MR, com emoji e o nome do estado. |
-| Criado em | Data de abertura do MR, no formato `dd/mm/aaaa`. `—` quando a data não veio da API. |
+| Updated | Data da última atividade no MR (novo commit, comentário, mudança de pipeline...), relativa a agora (`3 hours ago`, `23 minutes ago`), igual ao que a própria página do GitLab mostra. No painel web, a data e hora exatas aparecem ao passar o mouse. Recalculada a cada consulta: o texto muda sozinho entre um ciclo e outro, mesmo sem nada ter mudado no MR. |
+| Created | Data de abertura do MR, no formato `dd/mm/aaaa`. `—` quando a data não veio da API. |
 
 Estados de pipeline exibidos:
 
@@ -310,6 +312,8 @@ Estados de pipeline exibidos:
 | — | MR sem pipeline |
 
 Um estado que o GitLab venha a introduzir e que não esteja na lista aparece com `•` e o nome recebido, em vez de sumir da tabela.
+
+O relatório e os painéis trazem também as colunas **Mergeable** e **Conflicts** (ver tabela acima), omitidas do exemplo só para caber na largura deste documento.
 
 As linhas são ordenadas pela data de criação do MR, do mais recente para o mais antigo. MRs criados no mesmo instante são desempatados pelo rótulo.
 
@@ -336,7 +340,7 @@ python3 gitlab_monitor.py --mode web --port 8765
 ```
 
 ```text
-[2026-10-20 15:42:48 -03] Painel em http://127.0.0.1:8765/ (atualiza a cada 15 minuto(s)). Ctrl+C encerra.
+[2026-10-20 15:42:48 -03] Panel at http://127.0.0.1:8765/ (updates every 15 minute(s)). Ctrl+C to stop.
 ```
 
 Abra o endereço no navegador. Os títulos dos MRs são links para o GitLab, e as mudanças detectadas a cada passagem são registradas no terminal.
@@ -345,7 +349,7 @@ Abra o endereço no navegador. Os títulos dos MRs são links para o GitLab, e a
 
 **A primeira passagem já preenche a tabela.** Ela não compara com nada e não emite evento: serve de referência. Da segunda em diante, cada passagem compara com a anterior e as mudanças viram avisos. O mesmo vale para o painel no terminal; o relatório, por consultar uma única vez, nunca compara nem notifica.
 
-Consultar leva alguns segundos — cada MR exige detalhes e discussões —, então a página começa mostrando **"Consultando o GitLab…"** em vez de um número. Com 15 MRs, a tabela costuma aparecer em menos de 20 segundos. "Nenhum MR aberto no alvo" só aparece quando a consulta terminou e o alvo está mesmo vazio.
+Consultar leva alguns segundos — cada MR exige detalhes e discussões —, então a página começa mostrando **"Querying GitLab…"** em vez de um número. Com 15 MRs, a tabela costuma aparecer em menos de 20 segundos. "No open MRs for this target" só aparece quando a consulta terminou e o alvo está mesmo vazio.
 
 **A página se atualiza sozinha, sem recarregar.** Ela consulta o próprio monitor a cada 10 segundos e troca apenas a tabela, preservando rolagem e foco. Essa consulta é local e não gera chamada ao GitLab: quem fala com a API é o monitor, no intervalo configurado. Na prática, o que o monitor coleta aparece na tela em até 10 segundos. Se o monitor parar, a página avisa e volta a tentar.
 
@@ -357,8 +361,10 @@ Quando um MR muda de uma passagem para a seguinte, a célula correspondente ganh
 | --- | --- |
 | Likes | O número de reações 👍 mudou. |
 | Threads | A quantidade de discussões ou o estado de resolução mudou. |
-| Devs que abriram threads | Alguém novo abriu thread, ou alguém deixou de constar. |
+| Thread openers | Alguém novo abriu thread, ou alguém deixou de constar. |
 | Pipeline Status | A pipeline mudou de estado ou foi substituída. |
+
+Mergeable e Conflicts não entram nesse rastreamento: são exibidos, mas uma mudança neles não acende o 🔸.
 
 Uma legenda acima da tabela lembra o que as marcas significam — o 🔸 de alteração e o ✓ do like próprio. Só as células que realmente mudaram são marcadas: um MR que só ganhou likes marca apenas a coluna de likes. A marca reflete **a última comparação**, então ela some na passagem seguinte se aquele campo parar de mudar.
 
@@ -379,44 +385,46 @@ O ✓ foi escolhido em vez de um emoji por ocupar uma coluna só: emoji de largu
 
 A comparação usa as linhas da passagem anterior, não o snapshot em disco: assim ela alcança também quem abriu as threads, que o snapshot não guarda, e o formato do histórico do monitoramento fica intocado. A marca existe só no painel web; a tabela do terminal segue sem ela.
 
+**No painel web**, abaixo do emblema de likes aparecem os nomes de quem reagiu com 👍, por exemplo `bia.sa, cris.me`. Vem da mesma consulta GraphQL do ciclo (`awardEmoji` do MR), filtrado a `thumbsup` — outras reações (❤️, 🎉...) não contam como like aqui e ficam de fora da lista, do mesmo jeito que já ficam de fora da contagem de `upvotes`. MR sem nenhum like não mostra a linha. Esse detalhamento não existe na tabela do terminal, só o ✓ do like próprio.
+
 #### Ordenação e filtros
 
 A barra acima da tabela ordena e filtra o que já foi coletado, sem nova consulta ao GitLab — a resposta é imediata.
 
 | Ordenar por | Critério |
 | --- | --- |
-| Mais recentes | Data de criação, da mais nova para a mais antiga. É o padrão. |
-| Mais likes | Reações 👍, da maior para a menor. |
+| Most recent | Data de criação, da mais nova para a mais antiga. É o padrão. |
+| Most likes | Reações 👍, da maior para a menor. |
 | MR (A–Z) | Rótulo e título, em ordem alfabética. |
-| Autor (A–Z) | Nome de quem abriu o MR. |
-| Não resolvidas primeiro | Quantidade de threads em aberto, da maior para a menor. |
-| Devs que abriram threads | Nomes dos revisores, em ordem alfabética. |
-| Status da pipeline | Ordem de urgência, não alfabética: `failed`, `canceled`, `manual`, `running`, `pending`, `scheduled`, `skipped`, `success` e, por último, sem pipeline. |
+| Author (A–Z) | Nome de quem abriu o MR. |
+| Unresolved first | Quantidade de threads em aberto, da maior para a menor. |
+| Thread openers | Nomes dos revisores, em ordem alfabética. |
+| Pipeline status | Ordem de urgência, não alfabética: `failed`, `canceled`, `manual`, `running`, `pending`, `scheduled`, `skipped`, `success` e, por último, sem pipeline. |
 
 **Todo critério desempata pela data**, do mais recente para o mais antigo. Dois MRs com o mesmo número de likes, por exemplo, aparecem na ordem em que foram abertos.
 
-Os filtros de **Autor** e **Pipeline** restringem a tabela a um valor; podem ser combinados, e **Limpar filtros** devolve a visão completa. As opções saem dos MRs atuais, então não existe filtro que não devolva nada por falta de dados. MRs sem pipeline têm opção própria em vez de sumirem da lista. Com filtro ativo, o cabeçalho mostra `2 de 4 MR(s)`, e uma combinação sem resultado explica que nenhum MR corresponde aos filtros.
+Os filtros de **Author** e **Pipeline** restringem a tabela a um valor; podem ser combinados, e **Clear filters** devolve a visão completa. As opções saem dos MRs atuais, então não existe filtro que não devolva nada por falta de dados. MRs sem pipeline têm opção própria em vez de sumirem da lista. Com filtro ativo, o cabeçalho mostra `2 of 4 MR(s)`, e uma combinação sem resultado explica que nenhum MR corresponde aos filtros.
 
 Ordenação e filtros vivem só no navegador: a tabela do terminal segue sempre por data.
 
 #### Parâmetros na própria página
 
-O formulário no topo traz `PROJECT` e `INTERVAL` já preenchidos com os valores em vigor. Ao alterar e clicar em **Salvar**, os novos valores passam a valer imediatamente, com precedência sobre o `.env`:
+O formulário no topo traz `PROJECT` e `INTERVAL` já preenchidos com os valores em vigor. Ao alterar e clicar em **Save**, os novos valores passam a valer imediatamente, com precedência sobre o `.env`:
 
 - **Nada é gravado.** O `.env` não é alterado; encerrar o painel descarta as mudanças.
 - Os valores passam pela **mesma validação da linha de comando**: o projeto precisa pertencer à instância do `.env` e o intervalo precisa ser um número positivo. Valor inválido aparece como aviso na página e **mantém o alvo anterior** rodando. O campo vem preenchido na forma canônica (`groups/caminho/do/grupo` para grupos), que é aceita de volta — salvar sem editar nada mantém o mesmo alvo.
 - Trocar de alvo **recomeça a referência**: a primeira passagem no projeto novo apenas fotografa o estado, sem emitir eventos, para não comparar projetos diferentes entre si.
-- Salvar não espera o ciclo em andamento terminar: a consulta ao novo alvo começa na hora.
+- Save não espera o ciclo em andamento terminar: a consulta ao novo alvo começa na hora.
 
 #### Consultar fora do intervalo
 
-O botão **Verificar agora**, imediatamente antes de **Salvar**, força uma consulta na hora, sem esperar o intervalo terminar. Ele **não abre uma coleta paralela**: apenas adianta o ciclo do próprio painel — o mesmo mecanismo que a troca de alvo usa. Por isso não há risco de duas consultas simultâneas ao GitLab, nem de a comparação com o estado anterior se perder: a passagem adiantada compara com a anterior como qualquer outra, e as mudanças encontradas viram eventos normalmente.
+O botão **Check now**, imediatamente antes de **Save**, força uma consulta na hora, sem esperar o intervalo terminar. Ele **não abre uma coleta paralela**: apenas adianta o ciclo do próprio painel — o mesmo mecanismo que a troca de alvo usa. Por isso não há risco de duas consultas simultâneas ao GitLab, nem de a comparação com o estado anterior se perder: a passagem adiantada compara com a anterior como qualquer outra, e as mudanças encontradas viram eventos normalmente.
 
 Enquanto a consulta corre, o botão fica desabilitado e marcado como ocupado; ele volta ao normal quando a tabela nova chega. A página reconhece o fim pelo **carimbo da última coleta**, não por tempo estimado, então o botão libera exatamente quando há dados novos. O intervalo normal segue valendo depois — verificar agora não reinicia nem altera a contagem.
 
 #### Notificações do navegador
 
-A caixa **Notificar no navegador** **vem marcada**: no modo web, as notificações são o comportamento padrão. Cada mudança detectada vira uma notificação do navegador, e desmarcar a caixa as desliga enquanto a página estiver aberta.
+A caixa **Notify in browser** **vem marcada**: no modo web, as notificações são o comportamento padrão. Cada mudança detectada vira uma notificação do navegador, e desmarcar a caixa as desliga enquanto a página estiver aberta.
 
 Como os navegadores exigem permissão explícita, o painel resolve isso sozinho conforme o estado dela:
 
@@ -430,7 +438,7 @@ O aviso de permissão tem linha própria na página, separada da linha de erros,
 
 **Como a notificação aparece.** É a notificação nativa do sistema, emitida pelo navegador: o título é a identificação do MR (`!216 — feat(#ANT-9433): ...`) e o corpo traz a mudança e o link, como no terminal.
 
-**Testar sem esperar uma mudança.** O botão **Testar notificação**, ao lado da caixa, envia um aviso de exemplo imediatamente. Ele existe porque o silêncio do painel é ambíguo: pode ser que nenhum MR tenha mudado, ou que o aviso tenha saído da página e sido suprimido depois. Se o teste aparece, a página está funcionando e o silêncio é só falta de novidade; se não aparece, o bloqueio está no navegador ou no sistema, e a própria página diz onde olhar.
+**Testar sem esperar uma mudança.** O botão **Test notification**, ao lado da caixa, envia um aviso de exemplo imediatamente. Ele existe porque o silêncio do painel é ambíguo: pode ser que nenhum MR tenha mudado, ou que o aviso tenha saído da página e sido suprimido depois. Se o teste aparece, a página está funcionando e o silêncio é só falta de novidade; se não aparece, o bloqueio está no navegador ou no sistema, e a própria página diz onde olhar.
 
 Enquanto a permissão estiver pendente, **os eventos não são descartados**: ficam no monitor e são avisados assim que você concede. Quando muitas mudanças chegam juntas, acima de cinco elas viram **um aviso só**, com a contagem no título e a lista dos MRs no corpo — uma pilha de banners seria pior que a informação que eles trazem.
 
@@ -465,7 +473,7 @@ Como os arquivos ficam ao lado do script, **o modo web precisa da pasta `web/` p
 O visual segue o **design system FPF Tech**, nos guias `card`, `feedback`, `button` e `input`:
 
 - **Tokens.** Cor, espaçamento, raio, espessura de borda, altura de controle e tamanho de fonte ficam só em `styles/tokens.css`. Nenhuma regra de componente traz valor literal — nem hex, nem `rgba()`, nem `px`. A única exceção é a condição do `@media`, que por limitação do CSS não aceita variável; há teste cobrindo a regra e a exceção.
-- **Tema claro e escuro.** O seletor **Tema**, na barra acima da tabela, oferece *Automático*, *Claro* e *Escuro*. No automático a página segue a preferência do sistema e acompanha a troca dela sem recarregar; a escolha manual fica guardada no navegador e sobrevive ao recarregamento. O tema é resolvido ainda no `<head>`, antes da folha de estilo, para a página não piscar clara antes de escurecer.
+- **Tema claro e escuro.** O seletor **Theme**, na barra acima da tabela, oferece *Automatic*, *Light* e *Dark*. No automático a página segue a preferência do sistema e acompanha a troca dela sem recarregar; a escolha manual fica guardada no navegador e sobrevive ao recarregamento. O tema é resolvido ainda no `<head>`, antes da folha de estilo, para a página não piscar clara antes de escurecer.
 - Os tokens do tema escuro ficam em **um único bloco**, aplicado por atributo. Manter dois blocos — um por `@media`, outro por atributo — faria os dois saírem de sincronia; há teste garantindo que existe só um.
 - **Botões** nas variantes primária (ação de salvar) e ghost (limpar filtros), com os estados obrigatórios: default, hover, active, focus-visible, disabled e loading.
 - **Campos** com label associado e os estados default, focus, erro, desabilitado e somente leitura. O erro marca a borda do campo por `aria-invalid`, não apenas a mensagem.
@@ -579,7 +587,7 @@ Os modos relatório e painéis fazem a mesma passagem: leem o `.env`, resolvem o
 1. Lê o `.env`, resolve o alvo e o intervalo dando precedência ao que veio na execução sobre `PROJECT`/`INTERVAL`, valida os argumentos, define o modo (`--mode`, pergunta no terminal ou monitoramento), lê as credenciais e normaliza a URL da API e o alvo.
 2. Gera uma chave a partir da instância e do alvo e obtém um lock local. Apenas um monitor pode acompanhar o mesmo alvo/instância nessa pasta de histórico por vez.
 3. Se houver snapshot compatível, carrega a referência anterior. Caso contrário, a primeira consulta cria a referência sem emitir eventos de MRs.
-4. Faz uma única consulta GraphQL que lista os MRs abertos com pipeline, threads e likes próprios já embutidos — o mesmo mecanismo que a própria página de MRs do GitLab usa para montar a tabela, com threads aninhadas para também trazer quem abriu cada uma. Quando um MR sai da lista, consulta seus detalhes pela REST para confirmar o estado; `403`/`404` não significam merge.
+4. Faz uma única consulta GraphQL que lista os MRs abertos com pipeline, threads, likes próprios, `mergeable`, `conflicts` e `awardEmoji` já embutidos — o mesmo mecanismo que a própria página de MRs do GitLab usa para montar a tabela, com threads aninhadas para também trazer quem abriu cada uma. Quando um MR sai da lista, consulta seus detalhes pela REST para confirmar o estado; `403`/`404` não significam merge.
 5. Compara os snapshots. Em consultas bem-sucedidas, registra o novo estado em arquivo temporário e substitui o snapshot de forma atômica.
 6. Escreve os eventos e a quantidade de alterações no terminal. Se houver eventos e notificações estiverem habilitadas, envia um alerta agregado.
 7. Aguarda o restante do intervalo, descontando o tempo gasto na consulta e no notificador. Repete até `Ctrl+C` ou finaliza imediatamente com `--once`.
@@ -652,7 +660,7 @@ O token é enviado somente no header `PRIVATE-TOKEN`, por HTTPS, e redirecioname
 | Modo web não abre | Porta já em uso: escolha outra com `--port` ou `make web PORT=9000`. O endereço é sempre `127.0.0.1`, não acessível de outra máquina. |
 | Página do painel parada | Ela avisa na própria tela quando não alcança o monitor. Confira se o processo continua rodando no terminal. |
 | Painel sem tabela logo ao abrir | É a primeira consulta, que leva alguns segundos; a página mostra "Consultando o GitLab…" até terminar. |
-| Notificação do navegador não aparece | Clique em **Testar notificação** no formulário: ele envia um aviso na hora, sem esperar que algum MR mude, e separa as duas causas possíveis. Se o teste aparece e o painel segue calado, é porque nada mudou — o painel só avisa quando algo muda, e nunca na primeira passagem, que serve de referência. Depois, a caixa marcada e a permissão: se estiver pendente, clique na página para confirmá-la; se foi negada, a página explica. Por fim, confira se o próprio navegador pode notificar no sistema (no macOS, Ajustes do Sistema › Notificações) e se o Não perturbe está desligado. |
+| Notificação do navegador não aparece | Clique em **Test notification** no formulário: ele envia um aviso na hora, sem esperar que algum MR mude, e separa as duas causas possíveis. Se o teste aparece e o painel segue calado, é porque nada mudou — o painel só avisa quando algo muda, e nunca na primeira passagem, que serve de referência. Depois, a caixa marcada e a permissão: se estiver pendente, clique na página para confirmá-la; se foi negada, a página explica. Por fim, confira se o próprio navegador pode notificar no sistema (no macOS, Ajustes do Sistema › Notificações) e se o Não perturbe está desligado. |
 | Primeira consulta não notifica | É o comportamento esperado: cria a referência. Teste o notificador com `--test-notify`. |
 | `notify-send` ausente | Instale `libnotify-bin` no Ubuntu Desktop. |
 | `ServiceUnknown`/erro de D-Bus | Execute no terminal da sessão gráfica do usuário, sem `sudo`, com servidor de notificações ativo. |
@@ -686,7 +694,7 @@ py -3 -B -m unittest discover -s tests -v
 
 Com o `.venv` criado, `make test` faz o mesmo.
 
-Os testes não leem credenciais reais nem consultam o GitLab. Cobrem comparação de MRs, paginação da consulta GraphQL, resolução de ID numérico de projeto para a GraphQL, `.env` próprio do monitor, precedência da linha de comando sobre `PROJECT`/`INTERVAL`, escrita atômica, escolha de modo, montagem e alinhamento da tabela, destaque de likes, marca do like próprio, coluna de data, ordenações e filtros do painel, notificação dos painéis sem histórico nem lock, escape e rotas do painel web, validação e recusa de origem no `POST /settings` e no `POST /refresh`, preservação do `.env` ao salvar parâmetros, entrega incremental de eventos, conformidade do CSS com os tokens do design guide, argumentos dos notificadores, conteúdo Unicode, falhas e continuidade do monitor. Os testes do servidor sobem portas efêmeras em `127.0.0.1`.
+Os testes não leem credenciais reais nem consultam o GitLab. Cobrem comparação de MRs, paginação da consulta GraphQL, resolução de ID numérico de projeto para a GraphQL, `.env` próprio do monitor, precedência da linha de comando sobre `PROJECT`/`INTERVAL`, escrita atômica, escolha de modo, montagem e alinhamento da tabela, destaque de likes, marca do like próprio, lista de quem curtiu, colunas de mesclável/conflitos, coluna de data, ordenações e filtros do painel, notificação dos painéis sem histórico nem lock, escape e rotas do painel web, validação e recusa de origem no `POST /settings` e no `POST /refresh`, preservação do `.env` ao salvar parâmetros, entrega incremental de eventos, conformidade do CSS com os tokens do design guide, argumentos dos notificadores, conteúdo Unicode, falhas e continuidade do monitor. Os testes do servidor sobem portas efêmeras em `127.0.0.1`.
 
 A simulação Linux usa um executável temporário no lugar de `notify-send` e é executada em sistemas POSIX. O teste PowerShell usa `pwsh` quando disponível; se não estiver no `PATH`, indique o caminho de uma instalação existente:
 
