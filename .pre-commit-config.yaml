@@ -1,0 +1,50 @@
+# Ganchos locais do gitlab-monitor. Instale com `pre-commit install` e
+# `pre-commit install --hook-type pre-push`.
+#
+# O que roda no commit é o que é rápido; o que demora (jornadas no
+# navegador) fica no push, para não travar um commit pequeno.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        files: ^frontend/.*\.(js|mjs|ts|css|scss|html|json|md)$
+
+  - repo: local
+    hooks:
+      - id: eslint
+        name: ESLint do frontend
+        entry: make front-lint
+        language: system
+        pass_filenames: false
+        files: ^frontend/src/.*\.(ts|html)$
+
+      - id: design-system
+        name: Gates do Design System
+        entry: make front-styles
+        language: system
+        pass_filenames: false
+        files: ^frontend/src/.*\.(ts|html|scss)$
+
+      - id: python-tests
+        name: Testes do monitor
+        entry: make test
+        language: system
+        pass_filenames: false
+        files: ^(gitlab_monitor\.py|tests/.*\.py)$
+
+      - id: validacao-completa
+        name: Validação completa (lint, gates, testes e jornadas)
+        entry: make check
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]

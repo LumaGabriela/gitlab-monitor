@@ -1,0 +1,47 @@
+// Media query não aceita var(), então os degraus do @theme são repetidos aqui
+// em SCSS. scripts/design-tokens.test.mjs confere que os dois mapas são iguais:
+// se um lado mudar sozinho, o teste reprova.
+@use 'sass:map';
+
+$breakpoints: (
+  'xs': 320px,
+  'sm': 640px,
+  'md': 768px,
+  'lg': 1024px,
+  'xl': 1280px,
+);
+
+@function value($name) {
+  @if not map.has-key($breakpoints, $name) {
+    @error 'Breakpoint desconhecido: #{$name}.';
+  }
+  @return map.get($breakpoints, $name);
+}
+
+// A partir de (inclusive) o degrau.
+@mixin up($name) {
+  @media (min-width: value($name)) {
+    @content;
+  }
+}
+
+// Até (exclusive) o degrau.
+@mixin down($name) {
+  @media (max-width: value($name) - 1px) {
+    @content;
+  }
+}
+
+// As mesmas larguras, medidas no container e não na viewport: é o que um
+// componente deve usar, porque ele não sabe onde foi colocado.
+@mixin container-up($name) {
+  @container (min-width: #{value($name)}) {
+    @content;
+  }
+}
+
+@mixin container-down($name) {
+  @container (max-width: #{value($name) - 1px}) {
+    @content;
+  }
+}

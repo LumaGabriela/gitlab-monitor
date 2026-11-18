@@ -1,0 +1,22 @@
+/.env
+/.env.*
+!/.env.example
+/gitlab-history/
+/user-data/
+/.venv/
+__pycache__/
+*.py[cod]
+.DS_Store
+
+# Frontend
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.angular/
+/frontend/coverage/
+/frontend/playwright-report/
+/frontend/test-results/
+# O /docs/ é rascunho de trabalho (planos, ledgers, specs) e não é versionado.
+# Os ADRs são a exceção: o CLAUDE.md §2 aponta para eles, e decisão que o Git
+# não enxerga some na primeira máquina nova.
+/docs/*
+!/docs/adr/

@@ -1,0 +1,199 @@
+// Guia "feedback" do DS: selo (Badge/Tag) e aviso (Alert).
+
+.ui-tag {
+  display: inline-flex;
+  align-items: center;
+  // Centrado também na horizontal: com a largura fixa das colunas de
+  // contagem, alinhar à esquerda deixaria o número dançando dentro do selo.
+  justify-content: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-2);
+  border: var(--border-width-thin) solid var(--color-border-default);
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-raised);
+  color: var(--color-content-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
+  white-space: nowrap;
+
+  &--dashed {
+    border-style: dashed;
+  }
+
+  // Contagens (likes, threads) em coluna: largura fixa para os selos de
+  // linhas diferentes alinharem entre si em vez de dançar com o número.
+  &--fixed {
+    min-width: 6ch;
+    justify-content: center;
+  }
+
+  &--success {
+    background-color: var(--color-status-success-bg);
+    border-color: var(--color-status-success-border);
+    color: var(--color-status-success-content);
+  }
+
+  &--warning {
+    background-color: var(--color-status-warning-bg);
+    border-color: var(--color-status-warning-border);
+    color: var(--color-status-warning-content);
+  }
+
+  &--danger {
+    background-color: var(--color-status-danger-bg);
+    border-color: var(--color-status-danger-border);
+    color: var(--color-status-danger-content);
+  }
+
+  &--info {
+    background-color: var(--color-status-info-bg);
+    border-color: var(--color-status-info-border);
+    color: var(--color-status-info-content);
+  }
+
+  // Fora da escala de status do DS: destaque neutro para o que já está
+  // resolvido do ponto de vista de quem revisa (ex.: o MR já tem o seu like).
+  &--strong {
+    background-color: var(--color-interactive-primary-default);
+    border-color: var(--color-interactive-primary-default);
+    color: var(--color-interactive-primary-on);
+  }
+
+  // Indicador de estado: tamanho fixo (dois --row-mark-unit), fora da escala de
+  // densidade, para não encolher até ficar ilegível no modo compacto.
+  &__dot {
+    width: calc(var(--row-mark-unit) * 2);
+    height: calc(var(--row-mark-unit) * 2);
+    border-radius: var(--radius-full);
+    background-color: currentcolor;
+  }
+}
+
+.ui-alert {
+  display: block;
+  padding: var(--spacing-2) var(--spacing-3);
+  border: var(--border-width-thin) solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-raised);
+  color: var(--color-content-secondary);
+  font-size: var(--font-size-md);
+
+  &--info {
+    background-color: var(--color-status-info-bg);
+    border-color: var(--color-status-info-border);
+    color: var(--color-status-info-content);
+  }
+
+  &--success {
+    background-color: var(--color-status-success-bg);
+    border-color: var(--color-status-success-border);
+    color: var(--color-status-success-content);
+  }
+
+  &--warning {
+    background-color: var(--color-status-warning-bg);
+    border-color: var(--color-status-warning-border);
+    color: var(--color-status-warning-content);
+  }
+
+  &--danger {
+    background-color: var(--color-status-danger-bg);
+    border-color: var(--color-status-danger-border);
+    color: var(--color-status-danger-content);
+  }
+}
+
+// Estado vazio honesto (app-empty-state).
+.ui-empty-state {
+  display: grid;
+  justify-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-6);
+  text-align: center;
+  color: var(--color-content-tertiary);
+
+  &__message {
+    margin: 0;
+    max-width: 60ch;
+    font-size: var(--font-size-md);
+  }
+}
+
+// Falha de leitura (app-error-state): erro dito, não "sem dados".
+.ui-error-state {
+  display: grid;
+  justify-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-6);
+  border: var(--border-width-thin) solid var(--color-status-danger-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-status-danger-bg);
+  text-align: center;
+
+  &__icon {
+    color: var(--color-status-danger-content);
+  }
+
+  &__message {
+    margin: 0;
+    max-width: 60ch;
+    color: var(--color-content-primary);
+    font-size: var(--font-size-md);
+  }
+}
+
+// Esqueleto de carregamento (app-skeleton).
+@keyframes ui-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.ui-skeleton-group {
+  display: grid;
+  gap: var(--spacing-2);
+}
+
+.ui-skeleton {
+  display: block;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg-muted);
+  animation: ui-pulse calc(var(--duration-slow) * 4) var(--easing-standard) infinite;
+
+  &--line {
+    height: var(--spacing-4);
+  }
+
+  &--block {
+    height: var(--spacing-16);
+  }
+
+  &--tile {
+    height: calc(var(--spacing-16) + var(--spacing-8));
+    border-radius: var(--radius-md);
+  }
+}
+
+// ---------------------------------------------------------------- dica (appTooltip)
+.ui-tooltip {
+  position: fixed;
+  z-index: var(--z-index-tooltip);
+  max-width: calc(var(--spacing-16) * 4.5);
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-content-primary);
+  color: var(--color-content-inverse);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  pointer-events: none;
+  animation: ui-fade-in var(--duration-fast) var(--easing-standard);
+
+  &--above {
+    translate: 0 calc(var(--spacing-2) * -1);
+  }
+
+  &--below {
+    translate: 0 var(--spacing-2);
+  }
+}

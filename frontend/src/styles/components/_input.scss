@@ -1,0 +1,278 @@
+@use '../mixins' as *;
+
+// Guia "input" do DS: os controles em si. Um componente NÃO redesenha nada
+// daqui no próprio SCSS — scripts/check-design-system-controls.mjs reprova.
+
+%ui-control {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--size-control-md);
+  padding: var(--spacing-2) var(--spacing-3);
+  border: var(--border-width-thin) solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-default);
+  color: var(--color-content-primary);
+  font-family: inherit;
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-normal);
+  @include color-transition;
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-border-strong);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &:disabled {
+    background-color: var(--color-bg-muted);
+    color: var(--color-content-disabled);
+    cursor: not-allowed;
+  }
+
+  &[aria-invalid='true'] {
+    border-color: var(--color-status-danger-solid);
+  }
+}
+
+.ui-input {
+  @extend %ui-control;
+
+  &::placeholder {
+    color: var(--color-content-tertiary);
+  }
+}
+
+// Gatilho da seleção (app-select): um <button role="combobox">, com a cara de campo.
+// A lista é própria (.ui-select-panel), não a do sistema. A seta é um app-icon por cima (.ui-select-wrap).
+.ui-select {
+  @extend %ui-control;
+  appearance: none;
+  display: flex;
+  align-items: center;
+  padding-right: calc(var(--spacing-3) * 2 + var(--size-icon-sm));
+  text-align: left;
+  cursor: pointer;
+
+  &__value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    // Sem escolha: o texto é o placeholder, e tem a cor dele.
+    &--empty {
+      color: var(--color-content-tertiary);
+    }
+  }
+
+  &:disabled &__value--empty {
+    color: inherit;
+  }
+}
+
+.ui-select-wrap {
+  position: relative;
+  display: block;
+  min-width: 0;
+
+  &__chevron {
+    position: absolute;
+    top: 50%;
+    right: var(--spacing-3);
+    transform: translateY(-50%);
+    color: var(--color-content-tertiary);
+    pointer-events: none;
+    transition: transform var(--duration-fast) var(--easing-standard);
+  }
+
+  &:has([aria-expanded='true']) &__chevron {
+    transform: translateY(-50%) rotate(180deg);
+  }
+}
+
+// Painel da seleção, em sobreposição do CDK: a busca em cima e a lista
+// (cdkListbox) abaixo. Nunca mais estreito que o campo.
+.ui-select-panel {
+  @include floating-panel;
+  display: grid;
+  gap: var(--spacing-1);
+  // A sobreposição recebe a largura do campo; o painel ocupa tudo, nunca mais estreito que ele.
+  width: 100%;
+  margin-block: var(--spacing-1);
+  // O teto é do painel inteiro, mas quem rola é a lista: a busca fica à vista
+  // enquanto se filtra, em vez de subir junto com as opções.
+  max-height: calc(var(--spacing-16) * 5);
+  list-style: none;
+
+  // A busca e o campo de texto do DS: a moldura é do painel, então aqui só
+  // mora a linha com o ícone e o input sem borda própria.
+  &__search {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-1) var(--spacing-2);
+    border-bottom: var(--border-width-thin) solid var(--color-border-default);
+    color: var(--color-content-tertiary);
+  }
+
+  &__search-input {
+    flex: 1;
+    min-width: 0;
+    min-height: var(--size-control-sm);
+    border: 0;
+    background: none;
+    color: var(--color-content-primary);
+    font: inherit;
+
+    &::placeholder {
+      color: var(--color-content-tertiary);
+    }
+
+    &:focus-visible {
+      outline: none;
+    }
+  }
+
+  // Sem resultado é texto, não uma lista vazia: a diferença entre "não achei"
+  // e "não tem nada aqui" é a única informação útil no momento.
+  &__empty {
+    margin: 0;
+    padding: var(--spacing-2) var(--spacing-3);
+    color: var(--color-content-tertiary);
+    font-size: var(--font-size-sm);
+  }
+
+  &__list {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+
+    &:focus-visible {
+      @include focus-ring;
+      outline-offset: calc(var(--focus-ring-offset) * -1);
+    }
+  }
+
+  &__option {
+    @include floating-panel-item;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    min-height: var(--size-control-md);
+    font-size: var(--font-size-md);
+
+    @media (pointer: coarse) {
+      min-height: var(--size-touch-min);
+    }
+
+    &[aria-selected='true'] {
+      background-color: var(--color-interactive-primary-subtle);
+      font-weight: var(--font-weight-semibold);
+    }
+  }
+}
+
+.ui-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-height: var(--size-touch-min);
+  cursor: pointer;
+
+  &__input {
+    width: var(--size-icon-md);
+    height: var(--size-icon-md);
+    margin: 0;
+    accent-color: var(--color-interactive-primary-default);
+    cursor: inherit;
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+  }
+
+  &__label {
+    color: var(--color-content-primary);
+    font-size: var(--font-size-md);
+    user-select: none;
+  }
+
+  &--disabled {
+    cursor: not-allowed;
+
+    .ui-checkbox__label {
+      color: var(--color-content-disabled);
+    }
+  }
+}
+
+// Seleção múltipla: gatilho que resume a escolha e um painel de caixas de
+// seleção. Não é um <select multiple>, que no desktop exige Ctrl+clique e no
+// celular vira uma lista rolante sem rótulo.
+.ui-multi-select {
+  position: relative;
+  display: block;
+  min-width: 0;
+
+  &__trigger {
+    @extend %ui-control;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-2);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  &__value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__value--empty {
+    color: var(--color-content-tertiary);
+  }
+
+  // Sobreposto, e não empurrando a página: a barra de filtros é uma linha
+  // só, e expandir no fluxo deslocaria a tabela inteira a cada abertura.
+  &__panel {
+    position: absolute;
+    z-index: var(--z-index-dropdown);
+    top: calc(100% + var(--spacing-1));
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-1);
+    max-height: 18rem;
+    min-width: 12rem;
+    overflow-y: auto;
+    padding: var(--spacing-2);
+    // A busca acompanha a rolagem das caixas: aqui quem rola é o painel
+    // inteiro, e grudá-la no topo exigiria outra caixa de rolagem.
+    border: var(--border-width-thin) solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-raised);
+    box-shadow: var(--shadow-md);
+  }
+
+  // Modificador sobre .ui-checkbox: o controle é o do DS, aqui só ganha o
+  // espaçamento e o realce de item de lista.
+  &__option {
+    padding: 0 var(--spacing-2);
+    border-radius: var(--radius-sm);
+    @include color-transition;
+
+    &:hover {
+      background-color: var(--color-bg-muted);
+    }
+  }
+}

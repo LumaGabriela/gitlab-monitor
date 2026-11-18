@@ -1,0 +1,37 @@
+@use '../mixins' as *;
+
+// Link do DS. Serve tanto para <a> quanto para <button> com cara de link,
+// por isso zera borda e fundo.
+.ui-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: none;
+  color: var(--color-link-default);
+  font: inherit;
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:active {
+    color: var(--color-interactive-primary-active);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    color: var(--color-content-disabled);
+    text-decoration: none;
+    cursor: not-allowed;
+  }
+}

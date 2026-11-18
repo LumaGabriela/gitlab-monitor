@@ -1,0 +1,37 @@
+@use '../mixins' as *;
+
+// Guia "input" do DS, parte de fora: rótulo, ajuda e erro em volta de um
+// controle qualquer. Quem desenha o controle é _input.scss.
+.ui-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+
+  &__label {
+    color: var(--color-content-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+  }
+
+  &__required {
+    margin-left: var(--spacing-1);
+    color: var(--color-status-danger-content);
+  }
+
+  &__helper {
+    color: var(--color-content-tertiary);
+    font-size: var(--font-size-xs);
+  }
+
+  &__error {
+    color: var(--color-status-danger-content);
+    font-size: var(--font-size-xs);
+  }
+}
+
+// Texto que some da tela e fica para o leitor de tela (legenda de tabela,
+// rótulo de região já óbvia visualmente).
+.ui-visually-hidden {
+  @include visually-hidden;
+}
