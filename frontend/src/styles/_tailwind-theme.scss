@@ -1,0 +1,177 @@
+// Camada 2 de 2 do Design System FPF: o NOME semântico de cada token.
+// Componentes e folhas de estilo só podem citar os nomes daqui — nunca um
+// `-value` de _themes.scss, nunca um hex, rgba ou px solto.
+//
+// `@theme static` em vez de `@theme`: o Tailwind v4 só emite as variáveis que
+// vê usadas, e boa parte destes tokens é consumida por `var(--token)` dentro
+// do SCSS, não por classe utilitária. Sem o `static`, essas variáveis sumiriam
+// do CSS final.
+@theme static {
+  // Tipografia
+  --font-family-sans: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-family-mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+
+  --font-size-xs: var(--font-size-xs-value);
+  --font-size-sm: var(--font-size-sm-value);
+  --font-size-md: var(--font-size-md-value);
+  --font-size-base: var(--font-size-base-value);
+  --font-size-lg: var(--font-size-lg-value);
+  --font-size-xl: var(--font-size-xl-value);
+  --font-size-2xl: var(--font-size-2xl-value);
+  --font-size-3xl: var(--font-size-3xl-value);
+  --font-size-4xl: var(--font-size-4xl-value);
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  --font-weight-black: 900;
+
+  --line-height-tight: 1.1;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.65;
+
+  --letter-spacing-tight: -0.03em;
+  --letter-spacing-normal: 0em;
+  --letter-spacing-wider: 0.08em;
+  --letter-spacing-widest: 0.18em;
+
+  // Espaçamento
+  --spacing-1: var(--spacing-1-value);
+  --spacing-2: var(--spacing-2-value);
+  --spacing-3: var(--spacing-3-value);
+  --spacing-4: var(--spacing-4-value);
+  --spacing-5: var(--spacing-5-value);
+  --spacing-6: var(--spacing-6-value);
+  --spacing-8: var(--spacing-8-value);
+  --spacing-12: var(--spacing-12-value);
+  --spacing-16: var(--spacing-16-value);
+
+  // Marcadores de linha e ponto de status: não escalam com a densidade.
+  --row-mark-unit: var(--row-mark-unit-value);
+
+  // Raio
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-full: 9999px;
+
+  // Elevação
+  --shadow-sm: var(--shadow-sm-value);
+  --shadow-md: var(--shadow-md-value);
+  --shadow-lg: var(--shadow-lg-value);
+
+  // Borda e foco
+  --border-width-thin: 1px;
+  --border-width-thick: 2px;
+  --border-width-heavy: 3px;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+
+  // Movimento
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 400ms;
+  --easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --easing-emphasized: cubic-bezier(0.2, 0.75, 0.2, 1);
+
+  // Camadas
+  --z-index-sticky: 10;
+  --z-index-drawer: 900;
+  --z-index-dropdown: 1000;
+  --z-index-modal: 1100;
+  --z-index-tooltip: 1200;
+  --z-index-notification: 10000;
+
+  // Tamanhos
+  --size-control-sm: 32px;
+  --size-control-md: 40px;
+  --size-control-lg: 48px;
+  --size-icon-sm: 16px;
+  --size-icon-md: 20px;
+  --size-icon-lg: 24px;
+  --size-touch-min: 44px;
+  // Medida de um campo de formulário (select ou campo de texto) numa linha de
+  // campos: é a base do flex, não uma largura fixa. A barra de filtros do
+  // painel e as seções das configurações usam a mesma, para os controles das
+  // duas telas terem o mesmo tamanho.
+  --size-field-base: 14rem;
+  // Provisório: o DS não tem token para a caixa de 1px do texto que só o
+  // leitor de tela lê. Fica aqui, e não solto no mixin, para o gate de
+  // estilo continuar valendo e para haver um lugar só a mudar.
+  --size-hairline: 1px;
+
+  // Layout
+  --layout-sidebar-width: 240px;
+  --layout-sidebar-rail-width: 72px;
+  --layout-content-max: 2200px;
+  --layout-gutter: clamp(16px, 3.5vw, 48px);
+  --layout-form-max: 440px;
+
+  // Breakpoints (espelhados em _breakpoints.scss, com teste que confere)
+  --breakpoint-xs: 320px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+
+  // Cor: nome semântico apontando para o valor do tema vigente
+  --color-bg-base: var(--color-bg-base-value);
+  --color-bg-subtle: var(--color-bg-subtle-value);
+  --color-bg-muted: var(--color-bg-muted-value);
+  --color-bg-elevated: var(--color-bg-elevated-value);
+
+  --color-surface-default: var(--color-surface-default-value);
+  --color-surface-raised: var(--color-surface-raised-value);
+  --color-surface-sunken: var(--color-surface-sunken-value);
+
+  --color-overlay-backdrop: var(--color-overlay-backdrop-value);
+
+  --color-border-default: var(--color-border-default-value);
+  --color-border-strong: var(--color-border-strong-value);
+  --color-border-focus: var(--color-border-focus-value);
+
+  --color-content-primary: var(--color-content-primary-value);
+  --color-content-secondary: var(--color-content-secondary-value);
+  --color-content-tertiary: var(--color-content-tertiary-value);
+  --color-content-disabled: var(--color-content-disabled-value);
+  --color-content-inverse: var(--color-content-inverse-value);
+
+  --color-interactive-primary-default: var(--color-interactive-primary-default-value);
+  --color-interactive-primary-hover: var(--color-interactive-primary-hover-value);
+  --color-interactive-primary-active: var(--color-interactive-primary-active-value);
+  --color-interactive-primary-subtle: var(--color-interactive-primary-subtle-value);
+  --color-interactive-primary-on: var(--color-interactive-primary-on-value);
+
+  --color-interactive-secondary-default: var(--color-interactive-secondary-default-value);
+  --color-interactive-secondary-hover: var(--color-interactive-secondary-hover-value);
+  --color-interactive-secondary-on: var(--color-interactive-secondary-on-value);
+
+  --color-interactive-accent-default: var(--color-interactive-accent-default-value);
+  --color-interactive-accent-hover: var(--color-interactive-accent-hover-value);
+  --color-interactive-accent-subtle: var(--color-interactive-accent-subtle-value);
+  --color-interactive-accent-on: var(--color-interactive-accent-on-value);
+
+  --color-link-default: var(--color-link-default-value);
+
+  --color-status-success-solid: var(--color-status-success-solid-value);
+  --color-status-success-bg: var(--color-status-success-bg-value);
+  --color-status-success-border: var(--color-status-success-border-value);
+  --color-status-success-content: var(--color-status-success-content-value);
+  --color-status-warning-solid: var(--color-status-warning-solid-value);
+  --color-status-warning-bg: var(--color-status-warning-bg-value);
+  --color-status-warning-border: var(--color-status-warning-border-value);
+  --color-status-warning-content: var(--color-status-warning-content-value);
+  --color-status-danger-solid: var(--color-status-danger-solid-value);
+  --color-status-danger-bg: var(--color-status-danger-bg-value);
+  --color-status-danger-border: var(--color-status-danger-border-value);
+  --color-status-danger-content: var(--color-status-danger-content-value);
+  --color-status-info-solid: var(--color-status-info-solid-value);
+  --color-status-info-bg: var(--color-status-info-bg-value);
+  --color-status-info-border: var(--color-status-info-border-value);
+  --color-status-info-content: var(--color-status-info-content-value);
+}

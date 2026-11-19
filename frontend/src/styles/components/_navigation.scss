@@ -1,0 +1,65 @@
+@use '../mixins' as *;
+
+// Item da navegação lateral (app-nav-item). Só tokens do DS.
+
+// ---------------------------------------------------------------- nav item
+.ui-nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  min-height: var(--size-control-md);
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-md);
+  color: var(--color-content-secondary);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--easing-standard),
+    color var(--duration-fast) var(--easing-standard);
+
+  @media (pointer: coarse) {
+    min-height: var(--size-touch-min);
+  }
+
+  &:hover {
+    background-color: var(--color-interactive-primary-subtle);
+    color: var(--color-content-primary);
+  }
+
+  &:active {
+    background-color: var(--color-interactive-primary-subtle);
+    color: var(--color-content-primary);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &--active {
+    background-color: var(--color-interactive-primary-subtle);
+    color: var(--color-content-primary);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &--disabled,
+  &--disabled:hover {
+    background: none;
+    color: var(--color-content-disabled);
+    cursor: not-allowed;
+  }
+
+  &__label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // Menu em trilho: só o ícone, centralizado num alvo quadrado.
+  &--compact {
+    justify-content: center;
+    padding-inline: 0;
+  }
+}

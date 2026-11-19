@@ -1,0 +1,60 @@
+// Guia "card" do DS: painel com cabeçalho, corpo e rodapé opcionais.
+.ui-card {
+  display: block;
+  padding: var(--spacing-4);
+  border: var(--border-width-thin) solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-default);
+
+  &--raised {
+    box-shadow: var(--shadow-sm);
+  }
+
+  &--dashed {
+    border-style: dashed;
+  }
+
+  &--pad-sm {
+    padding: var(--spacing-2);
+  }
+
+  &--pad-none {
+    padding: 0;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-4);
+    margin-bottom: var(--spacing-3);
+  }
+
+  &__titles {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-2);
+    min-width: 0;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-tight);
+  }
+
+  &__count {
+    color: var(--color-content-tertiary);
+    font-size: var(--font-size-sm);
+  }
+
+  &__actions:empty,
+  &__footer:empty {
+    display: none;
+  }
+
+  &__footer {
+    margin-top: var(--spacing-3);
+  }
+}

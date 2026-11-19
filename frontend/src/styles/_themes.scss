@@ -1,0 +1,210 @@
+// Camada 1 de 2 do Design System FPF: o VALOR de cada token por tema.
+// Quem consome cor é a camada 2 (_tailwind-theme.scss), que dá o nome
+// semântico; nenhum componente lê um `-value` diretamente. Hex e rgba só
+// existem aqui, em _tailwind-theme.scss e em _breakpoints.scss — é o que o
+// gate scripts/check-hardcoded-styles.mjs verifica.
+:root {
+  color-scheme: light;
+
+  // Background
+  --color-bg-base-value: #ffffff;
+  --color-bg-subtle-value: #f4f4f4;
+  --color-bg-muted-value: #eaeaea;
+  --color-bg-elevated-value: #ffffff;
+
+  // Superfície
+  --color-surface-default-value: #ffffff;
+  --color-surface-raised-value: #ffffff;
+  --color-surface-sunken-value: #f4f4f4;
+
+  // Sobreposição
+  --color-overlay-backdrop-value: rgba(0, 0, 0, 0.4);
+
+  // Borda
+  --color-border-default-value: #dfdede;
+  --color-border-strong-value: #c8c8c8;
+  --color-border-focus-value: #b3c50e;
+
+  // Conteúdo
+  --color-content-primary-value: #383839;
+  --color-content-secondary-value: #4a4a4b;
+  --color-content-tertiary-value: #8c8c8c;
+  --color-content-disabled-value: #a0a0a0;
+  --color-content-inverse-value: #ffffff;
+
+  // Interativo primário
+  --color-interactive-primary-default-value: #b3c50e;
+  --color-interactive-primary-hover-value: #8fa00b;
+  --color-interactive-primary-active-value: #7a8a09;
+  --color-interactive-primary-subtle-value: #eef3c0;
+  --color-interactive-primary-on-value: #383839;
+
+  // Interativo secundário
+  --color-interactive-secondary-default-value: #383839;
+  --color-interactive-secondary-hover-value: #474647;
+  --color-interactive-secondary-on-value: #ffffff;
+
+  // Interativo de destaque
+  --color-interactive-accent-default-value: #34ae53;
+  --color-interactive-accent-hover-value: #28924a;
+  --color-interactive-accent-subtle-value: rgba(52, 174, 83, 0.1);
+  --color-interactive-accent-on-value: #ffffff;
+
+  // Link
+  --color-link-default-value: #7a8a09;
+
+  // Status
+  --color-status-success-solid-value: #34ae53;
+  --color-status-success-bg-value: rgba(52, 174, 83, 0.1);
+  --color-status-success-border-value: rgba(52, 174, 83, 0.3);
+  --color-status-success-content-value: #1e7a3a;
+  --color-status-warning-solid-value: #e5a020;
+  --color-status-warning-bg-value: rgba(229, 160, 32, 0.1);
+  --color-status-warning-border-value: rgba(229, 160, 32, 0.3);
+  --color-status-warning-content-value: #c8860a;
+  --color-status-danger-solid-value: #d94040;
+  --color-status-danger-bg-value: rgba(217, 64, 64, 0.1);
+  --color-status-danger-border-value: rgba(217, 64, 64, 0.25);
+  --color-status-danger-content-value: #b83535;
+  --color-status-info-solid-value: #2d8fd4;
+  --color-status-info-bg-value: rgba(45, 143, 212, 0.1);
+  --color-status-info-border-value: rgba(45, 143, 212, 0.25);
+  --color-status-info-content-value: #1666a0;
+
+  // Escala de texto. Fica aqui, e não só em _tailwind-theme.scss, porque é
+  // preferência de quem usa: a classe no <html> troca os valores de uma vez,
+  // e nenhum componente precisa saber que a escala mudou.
+  --font-size-xs-value: 10px;
+  --font-size-sm-value: 12px;
+  --font-size-md-value: 14px;
+  --font-size-base-value: 16px;
+  --font-size-lg-value: 18px;
+  --font-size-xl-value: 22px;
+  --font-size-2xl-value: 28px;
+  --font-size-3xl-value: 36px;
+  --font-size-4xl-value: 48px;
+
+  // Unidade dos marcadores de linha e do ponto de status: canal não-cromático,
+  // fica fora da escala de densidade e não é redefinida em .density-compact.
+  --row-mark-unit-value: 4px;
+
+  // Escala de espaçamento. Mesma estratégia do texto: a classe
+  // density-compact no <html> redefine os valores. --size-touch-min não entra
+  // aqui, de propósito: compactar não encolhe o alvo de toque.
+  --spacing-1-value: 4px;
+  --spacing-2-value: 8px;
+  --spacing-3-value: 12px;
+  --spacing-4-value: 16px;
+  --spacing-5-value: 20px;
+  --spacing-6-value: 24px;
+  --spacing-8-value: 32px;
+  --spacing-12-value: 48px;
+  --spacing-16-value: 64px;
+
+  // Elevação
+  --shadow-sm-value: 0 1px 2px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md-value: 0 2px 4px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.12);
+  --shadow-lg-value: 0 6px 18px rgba(0, 0, 0, 0.12), 0 18px 40px rgba(0, 0, 0, 0.18);
+}
+
+.dark {
+  color-scheme: dark;
+
+  --color-bg-base-value: #222223;
+  --color-bg-subtle-value: #383839;
+  --color-bg-muted-value: rgba(255, 255, 255, 0.05);
+  --color-bg-elevated-value: #383839;
+
+  --color-surface-default-value: #1e1e1f;
+  --color-surface-raised-value: #2a2a2b;
+  --color-surface-sunken-value: rgba(0, 0, 0, 0.2);
+
+  --color-overlay-backdrop-value: rgba(0, 0, 0, 0.4);
+
+  --color-border-default-value: rgba(255, 255, 255, 0.1);
+  --color-border-strong-value: rgba(255, 255, 255, 0.18);
+  --color-border-focus-value: #b3c50e;
+
+  --color-content-primary-value: rgba(255, 255, 255, 0.95);
+  --color-content-secondary-value: rgba(255, 255, 255, 0.65);
+  --color-content-tertiary-value: rgba(255, 255, 255, 0.4);
+  --color-content-disabled-value: rgba(255, 255, 255, 0.25);
+  --color-content-inverse-value: #222223;
+
+  --color-interactive-primary-default-value: #b3c50e;
+  --color-interactive-primary-hover-value: #c4d218;
+  --color-interactive-primary-active-value: #d4e038;
+  --color-interactive-primary-subtle-value: rgba(179, 197, 14, 0.15);
+  --color-interactive-primary-on-value: #222223;
+
+  --color-interactive-secondary-default-value: rgba(255, 255, 255, 0.12);
+  --color-interactive-secondary-hover-value: rgba(255, 255, 255, 0.18);
+  --color-interactive-secondary-on-value: rgba(255, 255, 255, 0.95);
+
+  --color-interactive-accent-default-value: #50c96c;
+  --color-interactive-accent-hover-value: #34ae53;
+  --color-interactive-accent-subtle-value: rgba(52, 174, 83, 0.15);
+  --color-interactive-accent-on-value: #222223;
+
+  --color-link-default-value: #c4d218;
+
+  --color-status-success-solid-value: #34ae53;
+  --color-status-success-bg-value: rgba(52, 174, 83, 0.15);
+  --color-status-success-border-value: rgba(52, 174, 83, 0.3);
+  --color-status-success-content-value: #50c96c;
+  --color-status-warning-solid-value: #e5a020;
+  --color-status-warning-bg-value: rgba(229, 160, 32, 0.15);
+  --color-status-warning-border-value: rgba(229, 160, 32, 0.3);
+  --color-status-warning-content-value: #ffba42;
+  --color-status-danger-solid-value: #d94040;
+  --color-status-danger-bg-value: rgba(217, 64, 64, 0.15);
+  --color-status-danger-border-value: rgba(217, 64, 64, 0.3);
+  --color-status-danger-content-value: #e85555;
+  --color-status-info-solid-value: #2d8fd4;
+  --color-status-info-bg-value: rgba(45, 143, 212, 0.15);
+  --color-status-info-border-value: rgba(45, 143, 212, 0.3);
+  --color-status-info-content-value: #52aaea;
+
+  --shadow-sm-value: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md-value: 0 2px 4px rgba(0, 0, 0, 0.35), 0 4px 8px rgba(0, 0, 0, 0.4);
+  --shadow-lg-value: 0 6px 18px rgba(0, 0, 0, 0.4), 0 18px 40px rgba(0, 0, 0, 0.5);
+}
+
+.text-size-sm {
+  --font-size-xs-value: 9px;
+  --font-size-sm-value: 11px;
+  --font-size-md-value: 12px;
+  --font-size-base-value: 14px;
+  --font-size-lg-value: 16px;
+  --font-size-xl-value: 19px;
+  --font-size-2xl-value: 25px;
+  --font-size-3xl-value: 32px;
+  --font-size-4xl-value: 42px;
+}
+
+.text-size-lg {
+  --font-size-xs-value: 11px;
+  --font-size-sm-value: 14px;
+  --font-size-md-value: 16px;
+  --font-size-base-value: 18px;
+  --font-size-lg-value: 20px;
+  --font-size-xl-value: 25px;
+  --font-size-2xl-value: 32px;
+  --font-size-3xl-value: 41px;
+  --font-size-4xl-value: 54px;
+}
+
+// A escala também dimensiona geometria de layout (coluna, modal, skeleton), e
+// isso é intencional; marcador de linha, ponto de status e --size-touch-min
+// ficam de fora.
+.density-compact {
+  --spacing-1-value: 2px;
+  --spacing-2-value: 4px;
+  --spacing-3-value: 8px;
+  --spacing-4-value: 12px;
+  --spacing-5-value: 16px;
+  --spacing-6-value: 20px;
+  --spacing-8-value: 24px;
+  --spacing-12-value: 36px;
+  --spacing-16-value: 48px;
+}

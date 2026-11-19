@@ -1,0 +1,38 @@
+// Seletor de idioma (app-language-selector): um appIconButton por idioma, com a bandeira dentro, num pill.
+// Hover, active, focus-visible e disabled vêm do .ui-icon-button; aqui fica só o que é do seletor. Só tokens.
+
+.ui-language-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1);
+  border: var(--border-width-thin) solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  background-color: var(--color-surface-sunken);
+
+  &__button.ui-icon-button {
+    border-radius: var(--radius-xl);
+    opacity: 0.6;
+
+    &:hover:not(:disabled) {
+      opacity: 1;
+    }
+  }
+
+  // Idioma selecionado; os seletores de hover e active repetem o fundo para vencer o do .ui-icon-button.
+  &__button--active.ui-icon-button,
+  &__button--active.ui-icon-button:hover:not(:disabled),
+  &__button--active.ui-icon-button:active:not(:disabled) {
+    border-color: var(--color-interactive-primary-default);
+    background-color: var(--color-interactive-primary-subtle);
+    opacity: 1;
+  }
+
+  &__flag {
+    display: block;
+    width: var(--spacing-4);
+    height: var(--spacing-4);
+    border-radius: var(--radius-xl);
+    object-fit: cover;
+  }
+}

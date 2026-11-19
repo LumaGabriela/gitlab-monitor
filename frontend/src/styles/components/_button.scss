@@ -1,0 +1,164 @@
+@use '../mixins' as *;
+
+// Guia "button" do DS. Aplicado por `appButton` sobre o <button>/<a> nativo,
+// para a semântica e o teclado continuarem sendo os do elemento.
+.ui-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  min-height: var(--size-control-md);
+  padding: var(--spacing-2) var(--spacing-4);
+  border: var(--border-width-thin) solid transparent;
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  color: var(--color-content-primary);
+  font-family: inherit;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
+  text-decoration: none;
+  cursor: pointer;
+  @include color-transition;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &--sm {
+    min-height: var(--size-control-sm);
+    padding: var(--spacing-1) var(--spacing-3);
+    font-size: var(--font-size-sm);
+  }
+
+  &--lg {
+    min-height: var(--size-control-lg);
+    padding: var(--spacing-3) var(--spacing-6);
+    font-size: var(--font-size-base);
+  }
+
+  &--full-width {
+    width: 100%;
+  }
+
+  &--primary {
+    background-color: var(--color-interactive-primary-default);
+    border-color: var(--color-interactive-primary-default);
+    color: var(--color-interactive-primary-on);
+
+    &:hover:not(:disabled, [aria-disabled='true']) {
+      background-color: var(--color-interactive-primary-hover);
+      border-color: var(--color-interactive-primary-hover);
+    }
+
+    &:active:not(:disabled, [aria-disabled='true']) {
+      background-color: var(--color-interactive-primary-active);
+      border-color: var(--color-interactive-primary-active);
+    }
+  }
+
+  &--secondary {
+    background-color: var(--color-interactive-secondary-default);
+    border-color: var(--color-interactive-secondary-default);
+    color: var(--color-interactive-secondary-on);
+
+    &:hover:not(:disabled, [aria-disabled='true']) {
+      background-color: var(--color-interactive-secondary-hover);
+      border-color: var(--color-interactive-secondary-hover);
+    }
+  }
+
+  &--outline {
+    border-color: var(--color-border-default);
+    color: var(--color-content-primary);
+
+    &:hover:not(:disabled, [aria-disabled='true']) {
+      background-color: var(--color-bg-muted);
+      border-color: var(--color-border-strong);
+    }
+  }
+
+  &--ghost {
+    color: var(--color-content-secondary);
+
+    &:hover:not(:disabled, [aria-disabled='true']) {
+      background-color: var(--color-bg-muted);
+      color: var(--color-content-primary);
+    }
+  }
+
+  &--danger {
+    background-color: var(--color-status-danger-solid);
+    border-color: var(--color-status-danger-solid);
+    color: var(--color-content-inverse);
+
+    &:hover:not(:disabled, [aria-disabled='true']) {
+      background-color: var(--color-status-danger-content);
+      border-color: var(--color-status-danger-content);
+    }
+  }
+
+  &--loading {
+    cursor: progress;
+  }
+}
+
+// Botão só de ícone (guia button, icon-only): alvo quadrado, sem rótulo
+// visível — o nome acessível vem do aria-label que a diretiva aplica.
+.ui-icon-button {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  padding: 0;
+  border: var(--border-width-thin) solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-content-secondary);
+  cursor: pointer;
+  @include color-transition;
+
+  &--md {
+    width: var(--size-control-md);
+    height: var(--size-control-md);
+  }
+
+  &--sm {
+    width: var(--size-control-sm);
+    height: var(--size-control-sm);
+  }
+
+  // No toque, o alvo cresce até o mínimo confortável, mesmo no tamanho sm.
+  @media (pointer: coarse) {
+    min-width: var(--size-touch-min);
+    min-height: var(--size-touch-min);
+  }
+
+  &--outline {
+    border-color: var(--color-border-strong);
+  }
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-bg-muted);
+    color: var(--color-content-primary);
+  }
+
+  &:active:not(:disabled) {
+    background-color: var(--color-interactive-primary-subtle);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

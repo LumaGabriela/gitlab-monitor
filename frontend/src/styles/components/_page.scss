@@ -1,0 +1,6 @@
+// Coluna da página: o espaçamento e a largura máxima vêm do `.ui-shell__main`; aqui só o empilhamento.
+.ui-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}

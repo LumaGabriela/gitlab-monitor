@@ -1,0 +1,44 @@
+@use '../mixins' as *;
+
+// Bloco recolhível (app-disclosure).
+.ui-disclosure-item {
+  &__summary {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    width: 100%;
+    min-height: var(--size-control-md);
+    padding: var(--spacing-1) 0;
+    border: 0;
+    background: none;
+    color: var(--color-content-primary);
+    font: inherit;
+    font-weight: var(--font-weight-medium);
+    text-align: left;
+    cursor: pointer;
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+  }
+
+  // O chevron aponta para o lado quando fechado e para baixo quando aberto;
+  // o giro acompanha a duração do DS e some em movimento reduzido.
+  &__chevron {
+    transition: transform var(--duration-fast) var(--easing-standard);
+  }
+
+  &--open &__chevron {
+    transform: rotate(90deg);
+  }
+
+  &__meta {
+    margin-left: auto;
+    color: var(--color-content-tertiary);
+    font-weight: var(--font-weight-regular);
+  }
+
+  &__body {
+    padding-top: var(--spacing-2);
+  }
+}
