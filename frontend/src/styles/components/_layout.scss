@@ -1,0 +1,500 @@
+@use '../breakpoints' as bp;
+@use '../mixins' as *;
+
+// Casca (app-shell, app-sidebar, app-drawer) e cabeçalho de página (app-page-header) com suas
+// ferramentas (app-page-tools). O item de navegação fica em _navigation.scss.
+
+// ---------------------------------------------------------------- shell
+.ui-shell {
+  height: 100%;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  background-color: var(--color-bg-subtle);
+  color: var(--color-content-primary);
+  font-family: var(--font-family-sans);
+
+  @include bp.up(md) {
+    grid-template-columns: var(--layout-sidebar-width) minmax(0, 1fr);
+    grid-template-rows: 1fr;
+    transition: grid-template-columns var(--duration-base) var(--easing-standard);
+
+    &--rail {
+      grid-template-columns: var(--layout-sidebar-rail-width) minmax(0, 1fr);
+    }
+  }
+
+  &__skip {
+    position: absolute;
+    left: var(--spacing-4);
+    top: var(--spacing-2);
+    z-index: var(--z-index-tooltip);
+    padding: var(--spacing-2) var(--spacing-4);
+    border-radius: var(--radius-md);
+    background-color: var(--color-interactive-primary-default);
+    color: var(--color-interactive-primary-on);
+    font-weight: var(--font-weight-semibold);
+    transform: translateY(calc(-100% - var(--spacing-4)));
+
+    &:focus-visible {
+      transform: none;
+      @include focus-ring;
+    }
+  }
+
+  &__topbar {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-index-sticky);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    padding: var(--spacing-2) var(--spacing-4);
+    background-color: var(--color-surface-default);
+    border-bottom: var(--border-width-thin) solid var(--color-border-default);
+
+    @include bp.up(md) {
+      display: none;
+    }
+  }
+
+  &__topbar-brand {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--size-touch-min);
+    height: var(--size-touch-min);
+    border: 0;
+    border-radius: var(--radius-md);
+    background: none;
+    color: var(--color-content-primary);
+    cursor: pointer;
+    transition: background-color var(--duration-fast) var(--easing-standard);
+
+    &:hover {
+      background-color: var(--color-bg-muted);
+    }
+
+    &:active {
+      background-color: var(--color-interactive-primary-subtle);
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+  }
+
+  &__sidebar {
+    display: none;
+
+    @include bp.up(md) {
+      display: block;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      height: 100dvh;
+    }
+  }
+
+  &__main {
+    min-width: 0;
+    width: 100%;
+    max-width: var(--layout-content-max);
+    // Encostado no menu (sem margem automática): a sobra de largura fica à direita.
+    margin: 0;
+    padding: var(--spacing-6) var(--layout-gutter) var(--spacing-12);
+
+    @include bp.up(md) {
+      padding-top: var(--spacing-8);
+    }
+
+    &:focus {
+      outline: none;
+    }
+  }
+}
+
+// ---------------------------------------------------------------- sidebar
+.ui-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+  height: 100%;
+  overflow-y: auto;
+  padding: var(--spacing-5) var(--spacing-3);
+  background-color: var(--color-surface-default);
+  border-right: var(--border-width-thin) solid var(--color-border-default);
+
+  // Coluna: a linha da marca e, abaixo dela, o subtítulo.
+  &__brand {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-1);
+    padding: 0 var(--spacing-1);
+  }
+
+  &__brand-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+  }
+
+  &__mark {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: var(--size-control-md);
+    height: var(--size-control-md);
+    border-radius: var(--radius-md);
+    background-color: var(--color-interactive-primary-default);
+    color: var(--color-interactive-primary-on);
+  }
+
+  &__toggle {
+    flex: none;
+    margin-left: auto;
+  }
+
+  // Trilho: só o botão e os ícones, centralizados.
+  &--rail {
+    padding-inline: var(--spacing-2);
+  }
+
+  // Trilho: botão em cima e a marca logo abaixo, empilhados no centro.
+  &--rail &__brand {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-2);
+    padding: 0;
+  }
+
+  &--rail &__toggle {
+    margin-left: 0;
+  }
+
+  // Sem nowrap: "GitLab Monitor" quebra em duas linhas na largura do sidebar.
+  &__brand-name {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-tight);
+  }
+
+  &__brand-tagline {
+    font-size: var(--font-size-sm);
+    color: var(--color-content-tertiary);
+  }
+
+  // O mesmo respiro acima e abaixo do título de uma seção: sem o gap aqui, o
+  // título encostava no item da seção anterior e o grupo parecia pertencer a ele.
+  &__nav {
+    display: grid;
+    gap: var(--spacing-2);
+  }
+
+  &__section {
+    display: grid;
+    gap: var(--spacing-2);
+  }
+
+  &__section-title {
+    margin: 0 var(--spacing-3);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-widest);
+    text-transform: uppercase;
+    color: var(--color-content-tertiary);
+  }
+
+  &__list {
+    display: grid;
+    gap: var(--spacing-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__footer {
+    display: grid;
+    gap: var(--spacing-3);
+    margin-top: auto;
+    padding-top: var(--spacing-4);
+    border-top: var(--border-width-thin) solid var(--color-border-default);
+  }
+
+  &__note {
+    margin: 0 var(--spacing-3);
+    font-size: var(--font-size-sm);
+    color: var(--color-content-tertiary);
+  }
+}
+
+// ---------------------------------------------------------------- drawer
+@keyframes ui-drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes ui-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.ui-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-index-drawer);
+
+  &__backdrop {
+    position: absolute;
+    inset: 0;
+    background-color: var(--color-overlay-backdrop);
+    animation: ui-fade-in var(--duration-base) var(--easing-standard);
+  }
+
+  &__panel {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: min(calc(var(--layout-sidebar-width) + var(--spacing-8)), 85vw);
+    overflow-y: auto;
+    background-color: var(--color-surface-default);
+    box-shadow: var(--shadow-lg);
+    animation: ui-drawer-in var(--duration-base) var(--easing-standard);
+
+    &:focus {
+      outline: none;
+    }
+
+    .ui-sidebar {
+      border-right: 0;
+    }
+  }
+}
+
+// ---------------------------------------------------------------- page header
+.ui-page-header {
+  container-type: inline-size;
+  display: grid;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-2);
+
+  // Vazio não ocupa linha: `__titles` é grade com `gap`, e um slot sem nada
+  // projetado abriria um respiro no meio do cabeçalho.
+  &__breadcrumb:empty,
+  &__meta:empty,
+  &__actions:empty {
+    display: none;
+  }
+
+  &__row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+
+    @include bp.container-up(sm) {
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+  }
+
+  &__titles {
+    display: grid;
+    gap: var(--spacing-1);
+    min-width: 0;
+  }
+
+  &__eyebrow {
+    margin: 0;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-widest);
+    text-transform: uppercase;
+    color: var(--color-content-tertiary);
+  }
+
+  &__title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-2) var(--spacing-3);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-tight);
+    letter-spacing: var(--letter-spacing-tight);
+    color: var(--color-content-primary);
+    overflow-wrap: anywhere;
+  }
+
+  &__subtitle {
+    margin: 0;
+    max-width: 70ch;
+    font-size: var(--font-size-md);
+    line-height: var(--line-height-normal);
+    color: var(--color-content-secondary);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-2);
+    flex: none;
+  }
+}
+
+// Contador ao lado de títulos (cabeçalho de página e de seção).
+.ui-page-header__count,
+.ui-section-header__count {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--spacing-2);
+  border: var(--border-width-thin) solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-content-secondary);
+  white-space: nowrap;
+}
+
+.ui-page-header__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-1) var(--spacing-2);
+
+  &:empty {
+    display: none;
+  }
+}
+
+// Linha de estado: o alvo monitorado e quando foi a última coleta. É layout, então
+// o espaçamento acompanha a densidade (--spacing-*).
+// A faixa mora fora do `app-page-header`, para ter a largura do card da tabela.
+// O contêiner é dela: sem um, o `@container` abaixo não encontraria contexto e
+// a versão empilhada nunca valeria.
+.ui-status-bar {
+  container-type: inline-size;
+}
+
+.ui-status-line {
+  // Da largura da página, como o card logo abaixo: a faixa fala da tela
+  // inteira. Abraçar o conteúdo deixava a hora da coleta colada nos alvos e a
+  // faixa de um tamanho diferente a cada alvo escolhido.
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-1) var(--spacing-2);
+  margin: 0;
+  // Mais alto que um rótulo solto: a faixa carrega a lista de alvos e a hora
+  // da coleta, e precisa de respiro em volta das duas.
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-md);
+  // --color-bg-subtle é o próprio fundo da página: sem superfície e borda a faixa
+  // não se destacaria de nada, nos dois temas.
+  border: var(--border-width-thin) solid var(--color-border-default);
+  background: var(--color-surface-default);
+  color: var(--color-content-secondary);
+  font-size: var(--font-size-md);
+
+  // A região viva: alvo e estado, sem o tempo relativo.
+  &__state {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-1) var(--spacing-2);
+  }
+
+  // A lista de alvos: um espaço entre eles maior que o da própria faixa, para
+  // dois nomes longos não parecerem um só.
+  &__target {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-1) var(--spacing-3);
+    color: var(--color-content-primary);
+    font-weight: var(--font-weight-medium);
+  }
+
+  &__label {
+    color: var(--color-content-secondary);
+    font-weight: var(--font-weight-regular);
+  }
+
+  // A faixa tem dois blocos: o que a coleta encontrou (ícone, alvos e estado) e
+  // o quando (a hora da última coleta e o botão de pedir outra).
+  &__main,
+  &__end {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-1) var(--spacing-2);
+  }
+
+  // O bloco do quando vai inteiro para a ponta direita, e a hora e o botão
+  // andam juntos: separá-los com `margin-left: auto` em cada um jogava a hora
+  // para o meio quando a faixa ficava larga.
+  &__end {
+    margin-left: auto;
+    gap: var(--spacing-1);
+  }
+
+  &__refresh {
+    flex: none;
+  }
+
+  // Estreita, a faixa empilha: um alvo por linha.
+  @include bp.container-down(sm) {
+    // Pelo topo: com a lista empilhada, o ícone de estado fica na linha do
+    // rótulo, e não no meio de um bloco de três linhas.
+    align-items: flex-start;
+
+    &__target {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+
+  // Só o ícone de estado, dentro do bloco da esquerda: o do botão de verificar
+  // é ação e mantém a cor do botão.
+  &--ok .ui-status-line__main > .ui-icon {
+    color: var(--color-status-success-content);
+  }
+
+  &--loading .ui-status-line__main > .ui-icon {
+    color: var(--color-status-info-content);
+  }
+
+  &--error .ui-status-line__main > .ui-icon {
+    color: var(--color-status-danger-content);
+  }
+}
+
+// Ferramentas do cabeçalho (app-page-tools).
+.ui-page-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-2);
+}

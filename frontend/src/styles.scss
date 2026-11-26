@@ -1,0 +1,63 @@
+@use '@angular/cdk/overlay-prebuilt.css';
+@use 'styles/themes';
+@use 'styles/tailwind-theme';
+
+@use 'tailwindcss';
+
+@use 'styles/components/button';
+@use 'styles/components/card';
+@use 'styles/components/disclosure';
+@use 'styles/components/feedback';
+@use 'styles/components/field';
+@use 'styles/components/file-picker';
+@use 'styles/components/icon';
+@use 'styles/components/language-selector';
+@use 'styles/components/layout';
+@use 'styles/components/input';
+@use 'styles/components/modal';
+@use 'styles/components/monitor';
+@use 'styles/components/navigation';
+@use 'styles/components/page';
+@use 'styles/components/settings';
+@use 'styles/components/table';
+@use 'styles/components/typography';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+// Sem color-scheme aqui: a propriedade é herdada, então declará-la em body
+// sobrescreveria o `color-scheme: dark` de .dark e deixaria barras de
+// rolagem e controles nativos claros no tema escuro.
+// Quem rola é a casca (`.ui-shell`), não o documento: assim o sidebar e a barra superior ficam parados.
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background-color: var(--color-bg-subtle);
+  color: var(--color-content-primary);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+}
+
+app-root {
+  display: block;
+  height: 100%;
+}
+
+// Movimento reduzido: zera as durações do DS, de onde saem todas as
+// transições dos `.ui-*`.
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}

@@ -1,0 +1,143 @@
+@use '../breakpoints' as bp;
+@use '../mixins' as *;
+
+// Blocos próprios do painel de MRs. Cada um declara `container-type` e reage
+// ao PRÓPRIO tamanho: a barra de filtros não sabe se está na página inteira
+// ou num card estreito, então medir a viewport daria a resposta errada.
+
+.ui-toolbar {
+  display: flex;
+  container-type: inline-size;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--spacing-4);
+
+  // Base menor que o conteúdo: sem ela, "Limpar filtros" não cabe na linha em
+  // larguras de borda e quebra sozinho para a linha de baixo. O min-width: 0
+  // mora no próprio campo, senão o mínimo automático do flex seria o
+  // conteúdo e esta base não teria efeito.
+  //
+  // Sem crescer: um campo de filtro não fica melhor ocupando um terço da
+  // tela, e esticá-los até a borda só afastava rótulo e valor um do outro.
+  &__field {
+    flex: 0 1 var(--size-field-base);
+  }
+
+  &__reset {
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+
+  // Um campo por linha só quando o card fica estreito de verdade. Em `lg` a
+  // conta ficava no fio: um card de 1015px empilhava e o de 1030px não, e a
+  // mesma linha de campos mudava de desenho entre duas telas do mesmo painel.
+  @include bp.container-down('md') {
+    &__field {
+      flex: 1 1 100%;
+    }
+
+    &__reset {
+      margin-left: 0;
+    }
+  }
+}
+
+// Painel único do monitor: filtros, legenda e tabela dentro do mesmo card,
+// como os painéis do fpf-metrics-web. A tabela tem moldura própria, então o
+// card só precisa dar o espaçamento entre as três faixas.
+.ui-monitor-panel {
+  display: grid;
+  gap: var(--spacing-4);
+
+  // O mínimo automático de um item de grid é o conteúdo dele: sem isto, a
+  // tabela larga empurrava o painel e a página inteira rolava na horizontal
+  // em vez de rolar dentro da própria tabela.
+  > * {
+    min-width: 0;
+  }
+}
+
+.ui-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-4);
+  color: var(--color-content-secondary);
+  font-size: var(--font-size-sm);
+
+  &__item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-1);
+  }
+
+  // A entrada de uma regra repete a borda que a linha destacada tem: mesmo traço, mesma espessura.
+  &__rule {
+    padding-left: var(--spacing-2);
+  }
+
+  @each $tone, $color in $rule-tone-colors {
+    &__rule--tone-#{$tone} {
+      border-left-color: $color;
+    }
+  }
+
+  @each $style, $units in $rule-mark-widths {
+    &__rule--mark-#{$style} {
+      border-left-style: $style;
+      border-left-width: calc(var(--row-mark-unit) * #{$units});
+    }
+  }
+}
+
+// Marca de campo alterado desde a última coleta.
+.ui-changed-mark {
+  color: var(--color-status-warning-solid);
+}
+
+// Lista empilhada dentro de uma célula (quem deu like, quem abriu thread).
+.ui-stacked-list {
+  margin: var(--spacing-1) 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-content-secondary);
+  font-size: var(--font-size-xs);
+
+  // Sem quebra dentro do item: a célula usa overflow-wrap: anywhere, que
+  // partiria "fulano.fulano" no meio do nome.
+  &__item {
+    white-space: nowrap;
+  }
+
+  // Quando a lista é o próprio valor da célula (as pessoas em revisão), ela
+  // não é apoio de nada: lê como o texto das outras colunas.
+  &--value {
+    margin: 0;
+    color: inherit;
+    font-size: inherit;
+  }
+}
+
+// Conteúdo de uma célula com a marca de alteração ao lado do valor.
+.ui-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+// O aviso da coleta fica sempre no DOM, para ser a região viva que anuncia a
+// mensagem do backend assim que ela chega — uma região criada junto com o
+// texto não anuncia nada. Sem aviso, ele some do desenho sem sair da árvore de
+// acessibilidade: sem caixa, e com a margem negativa cancelando o espaçamento
+// que a página põe entre os blocos.
+.ui-monitor-alert--quiet {
+  padding: 0;
+  border-width: 0;
+  margin-block-start: calc(-1 * var(--spacing-4));
+}
+
+// O aviso de preferências não salvas segue o mesmo princípio do aviso da
+// coleta: sempre no DOM para ser anunciado, sem caixa quando não há falha.
+.ui-preferences-alert--quiet {
+  padding: 0;
+  border-width: 0;
+}

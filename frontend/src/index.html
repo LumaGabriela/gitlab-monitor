@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>GitLab Monitor</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      // Aplica tema, tamanho do texto e densidade antes da primeira pintura,
+      // para a página não piscar clara antes de escurecer. Quem escreve os
+      // atributos data-* no <html> é o Python (gitlab_monitor.py), a partir de
+      // user-data/preferences.json; no `ng serve` eles não vêm, a página
+      // começa no automático e os serviços corrigem quando as preferências
+      // chegam. As classes são as mesmas que ThemeService, TextSizeService e
+      // DensityService aplicam (a `.dark` é a que _themes.scss espera).
+      (function () {
+        var raiz = document.documentElement;
+        var escolha = raiz.dataset.themeChoice;
+        var automatico = escolha !== 'light' && escolha !== 'dark';
+        var escuro = automatico
+          ? window.matchMedia('(prefers-color-scheme: dark)').matches
+          : escolha === 'dark';
+        raiz.classList.toggle('dark', escuro);
+        raiz.dataset.themeChoice = automatico ? 'auto' : escolha;
+        raiz.classList.toggle('text-size-sm', raiz.dataset.textSize === 'sm');
+        raiz.classList.toggle('text-size-lg', raiz.dataset.textSize === 'lg');
+        raiz.classList.toggle('density-compact', raiz.dataset.density === 'compact');
+      })();
+    </script>
+  </head>
+  <body>
+    <app-root></app-root>
+  </body>
+</html>

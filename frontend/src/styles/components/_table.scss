@@ -1,0 +1,420 @@
+@use '../breakpoints' as bp;
+@use '../mixins' as *;
+
+// Tabela de dados. Rola na horizontal dentro da região, com a primeira coluna fixa. Em tela abaixo de `md`
+// (`--stack`), cada linha vira um cartão com o nome da coluna antes do valor.
+// Moldura arredondada e linhas retas (padrão de Carbon, GitHub e Stripe): o raio da identidade fica na moldura, que
+// recorta as linhas; o hover pinta a linha inteira, de borda a borda, sem canto solto.
+
+// Tom da linha inteira, escolhido pelas regras de destaque de quem olha (`rowTone`).
+$row-tones: (
+  danger: var(--color-status-danger-bg),
+  warning: var(--color-status-warning-bg),
+  success: var(--color-status-success-bg),
+  strong: var(--color-bg-muted),
+  info: var(--color-status-info-bg),
+  neutral: var(--color-bg-subtle),
+);
+
+.ui-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: var(--border-width-thin) solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-default);
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.ui-table {
+  width: 100%;
+  // `auto` de propósito: é o único modo em que cada coluna fica exatamente do
+  // tamanho do que ela contém. Em `fixed` a largura sai da porcentagem do
+  // <colgroup>, e um selo maior que a coluna transborda por cima da vizinha,
+  // porque a célula não recorta. Onde uma coluna precisa de mais espaço do que
+  // o conteúdo pede, quem resolve é o `minWidth` da coluna (ver data-table).
+  table-layout: auto;
+  // separate + espaçamento zero: as bordas das células não se somam e a coluna fixa mantém a divisória.
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--font-size-md);
+  color: var(--color-content-primary);
+
+  caption {
+    padding: var(--spacing-3) var(--spacing-4) var(--spacing-1);
+    text-align: left;
+    font-weight: var(--font-weight-semibold);
+  }
+
+  th,
+  td {
+    padding: var(--spacing-2);
+    border-bottom: var(--border-width-thin) solid var(--color-border-default);
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  // Primeira e última coluna afastadas da moldura.
+  th:first-child,
+  td:first-child {
+    padding-left: var(--spacing-4);
+  }
+
+  th:last-child,
+  td:last-child {
+    padding-right: var(--spacing-4);
+  }
+
+  th {
+    background-color: var(--color-bg-subtle);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-content-secondary);
+    white-space: nowrap;
+  }
+
+  // Primeira coluna fixa ao rolar na horizontal.
+  th:first-child,
+  td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    white-space: nowrap;
+    background-color: var(--color-surface-default);
+  }
+
+  th:first-child {
+    background-color: var(--color-bg-subtle);
+  }
+
+  // A última linha encosta na moldura: sem divisória dupla.
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  // Tom da linha: pinta as células (a primeira, fixa, tem fundo próprio). Vem antes do
+  // hover, que tem a mesma especificidade e por isso continua ganhando enquanto o
+  // ponteiro está sobre a linha.
+  @each $tone, $color in $row-tones {
+    tbody tr.ui-table__row--tone-#{$tone} td {
+      background-color: $color;
+    }
+  }
+
+  // Marcador de borda: o fundo acima pode ser invisível para quem não distingue cores. A espessura sai do
+  // recuo da primeira célula, para o texto não deslizar entre a linha destacada e a comum.
+  // A cor sai do tom; o traço e a espessura, do `markStyle`.
+  @each $tone, $color in $rule-tone-colors {
+    tbody tr.ui-table__row--tone-#{$tone} td:first-child {
+      border-left-color: $color;
+    }
+  }
+
+  @each $style, $units in $rule-mark-widths {
+    $width: calc(var(--row-mark-unit) * #{$units});
+
+    tbody tr.ui-table__row--mark-#{$style} td:first-child {
+      border-left-style: $style;
+      border-left-width: $width;
+      padding-left: calc(var(--spacing-4) - #{$width});
+    }
+  }
+
+  // O texto e o ícone do destaque, antes do conteúdo da primeira célula.
+  // Pode ter mais de um ícone: um por cor que casou, com respiro entre eles.
+  // Linha reta, de borda a borda: no hover o fundo muda e a moldura recorta os cantos.
+  tbody tr,
+  tfoot tr {
+    @include color-transition;
+
+    &:hover td {
+      background-color: var(--color-bg-muted);
+    }
+  }
+
+  // Rodapé (resíduo ou total que fecha a tabela): separado das linhas por uma borda mais forte.
+  tfoot td {
+    border-top: var(--border-width-thin) solid var(--color-border-strong);
+    border-bottom: 0;
+    color: var(--color-content-secondary);
+    font-weight: var(--font-weight-medium);
+  }
+
+  // Linha com destino (rowLink): clicável inteira, como o item da lista.
+  tr.ui-table__row--link {
+    cursor: pointer;
+
+    &:active td {
+      background-color: var(--color-interactive-primary-subtle);
+    }
+  }
+
+  &__cell--end {
+    text-align: right !important;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  &__cell--nowrap {
+    white-space: nowrap;
+  }
+
+  &__cell--mono {
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-sm);
+  }
+
+  // Cabeçalho que ordena: o botão ocupa o título; a seta mostra o sentido (ou que dá para ordenar).
+  &__th--sortable {
+    padding-block: var(--spacing-1);
+  }
+
+  &__sort {
+    @include color-transition;
+
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    margin-inline: calc(var(--spacing-1) * -1);
+    padding: var(--spacing-1);
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+
+    app-icon {
+      color: var(--color-content-tertiary);
+    }
+
+    &:hover {
+      background-color: var(--color-bg-muted);
+      color: var(--color-content-primary);
+    }
+
+    &:active {
+      background-color: var(--color-interactive-primary-subtle);
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+
+    &:disabled {
+      color: var(--color-content-disabled);
+      cursor: not-allowed;
+    }
+  }
+
+  &__sort--active {
+    color: var(--color-content-primary);
+
+    app-icon {
+      color: var(--color-content-primary);
+    }
+  }
+
+  // Densidade compacta: tabelas longas cabem mais linhas na tela.
+  &--compact {
+    th,
+    td {
+      padding-block: var(--spacing-1);
+    }
+  }
+
+  &__empty {
+    padding: var(--spacing-6) !important;
+    text-align: center !important;
+    color: var(--color-content-tertiary);
+  }
+}
+
+// Cartões no celular (tela abaixo de `md`): o cabeçalho vira a fila dos botões de ordenar, cada linha um cartão e
+// cada célula "nome da coluna · valor". Estado vazio e carregando (sem data-label) ocupam o cartão inteiro.
+// Pela tela, não pelo container: no desktop, tabela pequena em painel dividido continua tabela.
+@include bp.down(md) {
+  // Cada cartão já tem borda e raio: a moldura sai para não emoldurar cartões.
+  .ui-table-wrapper:has(> .ui-table--stack) {
+    border: 0;
+    border-radius: var(--radius-sm);
+    background-color: transparent;
+  }
+
+  .ui-table.ui-table--stack {
+    // No cartão não há colunas: o piso de largura delas só criaria rolagem lateral.
+    th,
+    td {
+      min-width: 0 !important;
+    }
+
+    caption {
+      display: block;
+      padding: 0 0 var(--spacing-2);
+    }
+
+    thead tr {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-1) var(--spacing-3);
+      padding-bottom: var(--spacing-2);
+    }
+
+    thead th {
+      position: static;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+
+    thead th:not(.ui-table__th--sortable),
+    thead tr:not(:has(.ui-table__th--sortable)) {
+      display: none;
+    }
+
+    tbody,
+    tfoot {
+      display: grid;
+      gap: var(--spacing-2);
+    }
+
+    // No cartão, o tom pinta o cartão e não as células, que ficam transparentes.
+    @each $tone, $color in $row-tones {
+      tbody tr.ui-table__row--tone-#{$tone} {
+        background-color: $color;
+      }
+    }
+
+    tbody tr[class*='--tone-'] td {
+      background-color: transparent;
+    }
+
+    // A borda de marcador vai no cartão, não na primeira célula.
+    tbody tr[class*='--tone-'] td:first-child,
+    tbody tr[class*='--mark-'] td:first-child {
+      border-left: 0;
+      padding-left: 0;
+    }
+
+    @each $tone, $color in $rule-tone-colors {
+      tbody tr.ui-table__row--tone-#{$tone} {
+        border-left-color: $color;
+      }
+    }
+
+    @each $style, $units in $rule-mark-widths {
+      tbody tr.ui-table__row--mark-#{$style} {
+        border-left-style: $style;
+        border-left-width: calc(var(--row-mark-unit) * #{$units});
+      }
+    }
+
+    // Sem o espaço de uma coluna, o marcador abre a linha do cartão.
+    tbody tr,
+    tfoot tr {
+      display: grid;
+      gap: var(--spacing-1);
+      padding: var(--spacing-3);
+      border: var(--border-width-thin) solid var(--color-border-default);
+      border-radius: var(--radius-md);
+
+      &:hover {
+        background-color: var(--color-bg-muted);
+      }
+
+      &:hover td {
+        background-color: transparent;
+      }
+    }
+
+    tfoot {
+      margin-top: var(--spacing-2);
+    }
+
+    tfoot tr {
+      border-color: var(--color-border-strong);
+    }
+
+    tr.ui-table__row--link:active {
+      background-color: var(--color-interactive-primary-subtle);
+
+      td {
+        background-color: transparent;
+      }
+    }
+
+    td {
+      position: static;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--spacing-1) var(--spacing-3);
+      padding: 0;
+      border: 0;
+      border-radius: 0 !important;
+      background: transparent;
+      white-space: normal;
+    }
+
+    td[data-label]::before {
+      content: attr(data-label);
+      color: var(--color-content-secondary);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      text-align: left;
+    }
+
+    td:first-child {
+      font-weight: var(--font-weight-semibold);
+    }
+
+    .ui-table__cell--end {
+      text-align: right;
+    }
+
+    .ui-table__empty {
+      justify-content: center;
+    }
+
+    .ui-cell-text {
+      min-width: 0;
+      text-align: right;
+    }
+
+    .ui-mini-bar {
+      flex: 1 1 100%;
+    }
+  }
+}
+
+// Célula com texto principal e nota (app-cell-text): a nota quebra linha mesmo em tabela sem quebra.
+.ui-cell-text {
+  display: grid;
+  gap: var(--spacing-1);
+  min-width: calc(var(--spacing-16) * 3);
+  max-width: calc(var(--spacing-16) * 6);
+  white-space: normal;
+
+  &__main {
+    overflow-wrap: anywhere;
+  }
+
+  &__main--mono {
+    font-family: var(--font-family-mono);
+  }
+
+  &__note {
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-normal);
+    color: var(--color-content-secondary);
+    white-space: normal;
+  }
+}
+
+// Mini barras de etapa dentro de tabela: largura mínima para a proporção ser legível.
+.ui-table .ui-mini-bar {
+  min-width: calc(var(--spacing-16) * 2);
+}

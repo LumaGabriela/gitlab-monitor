@@ -1,0 +1,294 @@
+@use '../breakpoints' as bp;
+@use '../mixins' as *;
+
+// Página de configurações: a seção aberta no conteúdo; a navegação mora no sidebar da casca.
+.ui-settings-page__content {
+  display: grid;
+  gap: var(--spacing-6);
+  min-width: 0;
+}
+
+// Cada seção é um card com título h2 e o conteúdo em coluna.
+.ui-settings-section {
+  display: grid;
+  gap: var(--spacing-4);
+  min-width: 0;
+  padding: var(--spacing-4);
+  border: var(--border-width-thin) solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-default);
+  // Ao receber o foco ao trocar de seção, o título não fica colado na borda da janela.
+  scroll-margin-top: var(--spacing-4);
+
+  &__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-2);
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-content-primary);
+
+    // Recebe foco por programa (tabindex -1) ao trocar de seção.
+    &:focus-visible {
+      @include focus-ring;
+    }
+  }
+}
+
+.ui-settings {
+  display: grid;
+  container-type: inline-size;
+  gap: var(--spacing-4);
+
+  // Sem largura forçada: os botões ficam do tamanho do texto e o
+  // flex-wrap decide quando quebrar. Forçar 100% os empilhava mesmo onde
+  // os três cabiam lado a lado.
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--spacing-2);
+  }
+}
+
+// Uma coluna por linha e duas ou mais quando couberem: o mínimo de 14rem é o
+// que decide, e abaixo de ~28rem só cabe uma.
+.ui-settings__columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--spacing-1) var(--spacing-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ui-settings__column {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+}
+
+.ui-settings__column-actions {
+  display: inline-flex;
+  flex: none;
+  gap: var(--spacing-1);
+}
+
+.ui-settings__hint {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-content-secondary);
+}
+
+.ui-settings__saved {
+  min-height: var(--spacing-4);
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-content-secondary);
+}
+
+.ui-settings__actions--start {
+  justify-content: flex-start;
+}
+
+// Uma regra por bloco: o cabeçalho (ligar/desligar, quanto casa agora e
+// remover) e a linha de campos. O bloco repete a borda que a linha destacada
+// vai ter na tabela — mesmo traço, mesma espessura, mesma cor —, então a cor
+// escolhida no select se vê onde ela é escolhida.
+.ui-rule-list {
+  display: grid;
+  gap: var(--spacing-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ui-rule-list__rule {
+  display: grid;
+  container-type: inline-size;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3);
+  border: var(--border-width-thin) solid var(--color-border-default);
+  border-radius: var(--radius-md);
+}
+
+@each $tone, $color in $rule-tone-colors {
+  .ui-rule-list__rule--tone-#{$tone} {
+    border-left-color: $color;
+  }
+}
+
+@each $style, $units in $rule-mark-widths {
+  .ui-rule-list__rule--mark-#{$style} {
+    border-left-style: $style;
+    border-left-width: calc(var(--row-mark-unit) * #{$units});
+  }
+}
+
+// O "Adicionar regra" não encosta na última regra: o `app-rule-list` é um
+// item só da grade da seção, então o respiro entre a lista e a ação é dele,
+// e não da seção que o contém.
+.ui-rule-list__add {
+  margin-top: var(--spacing-4);
+}
+
+.ui-rule-list__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-2) var(--spacing-3);
+}
+
+// Posição da regra na precedência: o número que a tabela obedece.
+.ui-rule-list__position {
+  min-width: var(--spacing-6);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-content-secondary);
+  text-align: center;
+}
+
+// As setas vão para a ponta, antes do Remover; o vão é o mesmo do cabeçalho.
+.ui-rule-list__moves {
+  display: flex;
+  gap: var(--spacing-1);
+  margin-left: auto;
+
+  // Mesma razão do `.ui-rule-list__remove`: em bloco estreito o cabeçalho
+  // quebra, e o lugar delas é o começo da linha.
+  @include bp.container-down('sm') {
+    margin-left: 0;
+  }
+}
+
+// Com as setas na ponta, o Remover vem logo depois delas, e não empurrado.
+.ui-rule-list__moves + .ui-rule-list__remove {
+  margin-left: 0;
+}
+
+// Na ponta: a regra é lida da esquerda (ligada, quanto casa) e a ação que
+// apaga fica longe do que se lê.
+.ui-rule-list__remove {
+  margin-left: auto;
+
+  // Em bloco estreito o cabeçalho quebra e o botão fica numa linha só dele.
+  // Empurrado para a direita, ele abre um vão entre o cabeçalho e o primeiro
+  // campo; na própria linha, o lugar dele é o começo, junto do que se lê.
+  @include bp.container-down('sm') {
+    margin-left: 0;
+  }
+}
+
+// Título de um bloco dentro da seção — os critérios de aviso, por exemplo.
+// Menor que o h2: é parte da seção, e não outra seção.
+.ui-settings__subtitle {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-content-primary);
+}
+
+// Linha de campos: a mesma medida da barra de filtros do painel. Cada campo
+// parte de `--size-field-base` e não cresce, então um select das configurações
+// tem o tamanho do select do painel, e os dois viram um campo por linha na
+// mesma largura de card.
+//
+// Grade com `subgrid`, e não flex: cada campo ocupa as três faixas da linha
+// (rótulo, controle e ajuda), então o controle de um campo fica na altura do
+// controle do vizinho mesmo quando um rótulo ocupa duas linhas e o outro, uma.
+// Alinhar pelo topo ou pelo fim resolvia um lado e estragava o outro.
+.ui-settings__fields {
+  display: grid;
+  container-type: inline-size;
+  grid-template-columns: repeat(auto-fill, minmax(0, var(--size-field-base)));
+  gap: var(--spacing-3) var(--spacing-4);
+
+  > app-field {
+    display: grid;
+    grid-row: span 3;
+    grid-template-rows: subgrid;
+    // O respiro interno do campo é o do `.ui-field`, não o que separa um campo
+    // do outro: a subgrade herda o `gap` do pai se ninguém disser o contrário.
+    gap: var(--spacing-1);
+    min-width: 0;
+  }
+
+  // O que não é campo (aviso, estado vazio) ocupa a linha inteira: a medida
+  // de campo é para campo.
+  > app-alert,
+  > app-empty-state {
+    grid-column: 1 / -1;
+    grid-row: span 3;
+  }
+
+  @include bp.container-down('md') {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+// Um preset por bloco: o nome (ou o campo que o renomeia) e as ações. Quebram
+// conforme a largura do próprio card, e o campo de novo preset segue o mesmo desenho.
+.ui-settings__presets {
+  display: grid;
+  gap: var(--spacing-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ui-settings__preset,
+.ui-settings__preset-save {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.ui-settings__preset {
+  padding: var(--spacing-3);
+  border: var(--border-width-thin) solid var(--color-border-default);
+  border-radius: var(--radius-md);
+}
+
+.ui-settings__preset-name {
+  display: grid;
+  flex: 0 1 var(--size-field-base);
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.ui-settings__preset-label {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-content-primary);
+}
+
+// Seção Dados: exportar e importar são dois blocos, com o resultado abaixo.
+.ui-settings-data {
+  &__block {
+    display: grid;
+    gap: var(--spacing-2);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &__result {
+    display: grid;
+    gap: var(--spacing-3);
+  }
+
+  &__confirm {
+    display: grid;
+    gap: var(--spacing-3);
+  }
+
+  &__summary {
+    margin: 0;
+  }
+}

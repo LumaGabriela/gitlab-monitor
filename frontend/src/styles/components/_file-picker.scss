@@ -1,0 +1,11 @@
+@use '../mixins';
+
+.ui-file-picker {
+  display: inline-flex;
+}
+
+// O input nativo existe só para abrir o seletor do sistema; o botão do DS é
+// quem aparece e quem recebe o foco.
+.ui-file-picker__input {
+  @include mixins.visually-hidden;
+}

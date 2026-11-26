@@ -1,0 +1,30 @@
+// Ícone (app-icon). Tamanho só por token; a cor herda do texto (currentColor).
+.ui-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  line-height: 0;
+
+  svg {
+    width: 100%;
+    height: 100%;
+    stroke: currentColor;
+  }
+
+  &--sm {
+    width: var(--size-icon-sm);
+    height: var(--size-icon-sm);
+  }
+
+  &--md {
+    width: var(--size-icon-md);
+    height: var(--size-icon-md);
+  }
+
+  &--lg {
+    width: var(--size-icon-lg);
+    height: var(--size-icon-lg);
+  }
+}

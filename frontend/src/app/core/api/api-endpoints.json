@@ -1,0 +1,7 @@
+{
+  "panelData": "/data",
+  "panelSettings": "/settings",
+  "panelRefresh": "/refresh",
+  "panelPreferences": "/preferences",
+  "panelTargets": "/projects"
+}
